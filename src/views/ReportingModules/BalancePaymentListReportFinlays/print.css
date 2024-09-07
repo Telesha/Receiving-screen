@@ -1,0 +1,38 @@
+.record-container {
+  height: 270mm;
+  width: 188mm;
+  /* A5 height */
+  page-break-before: always;
+}
+
+.table-responsive {
+  width: 148mm;
+  /* A5 width */
+  margin: 0;
+  padding: 0;
+}
+
+.header {
+  position: relative;
+}
+
+.inner-div {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+}
+
+@media print {
+
+  html,
+  body {
+    height: initial !important;
+    overflow: initial !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    size: auto !important;
+    margin: 10mm;
+  }
+}
