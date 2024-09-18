@@ -323,72 +323,80 @@ export default function SundryAttendanceBulkUpload(props) {
         if (attendanceData.length <= FormDetails.musterChitEmployeeCount) {
             var successList = attendanceData.filter(x => (x.empNo === '') || (x.dayType === '') || (x.dayOtHours === '') || (x.nightOtHours === '') || (x.doubleOtHours === '') || (x.isCashJob === ''))
             if (successList.length === 0) {
-                var wrongRecords = attendanceData.filter(x =>
-                    !(["full", "half"].includes(x.dayType.toLowerCase()) && ["yes", "no"].includes(x.isCashJob.toLowerCase()))
+                var negativeValues = attendanceData.filter(x =>
+                (parseFloat(x.dayOtHours) < 0 ||
+                    parseFloat(x.nightOtHours) < 0 ||
+                    parseFloat(x.doubleOtHours) < 0)
                 );
-                if (wrongRecords.length === 0) {
-                    let datarest = await Promise.all(attendanceData.map(async data => {
+                if (negativeValues.length === 0) {
+                    var wrongRecords = attendanceData.filter(x =>
+                        !(["full", "half"].includes(x.dayType.toLowerCase()) && ["yes", "no"].includes(x.isCashJob.toLowerCase()))
+                    );
+                    if (wrongRecords.length === 0) {
+                        let datarest = await Promise.all(attendanceData.map(async data => {
 
-                        const empData = employeeDetails.find((x) => x.registrationNumber == data.empNo)
-                        var attendanceID = data.dayType.toLowerCase() == "full" ? parseInt(1) : parseInt(2)
-                        var manDaysCount = 0
-                        if (attendanceBulkUpload.isHoliday === true && !(data.isCashJob.toLowerCase() == "yes")) {
-                            if (parseInt(attendanceID) === 1) {
-                                manDaysCount = 1.5
-                            } else if (parseInt(attendanceID) === 2) {
-                                manDaysCount = 0.75
+                            const empData = employeeDetails.find((x) => x.registrationNumber == data.empNo)
+                            var attendanceID = data.dayType.toLowerCase() == "full" ? parseInt(1) : parseInt(2)
+                            var manDaysCount = 0
+                            if (attendanceBulkUpload.isHoliday === true && !(data.isCashJob.toLowerCase() == "yes")) {
+                                if (parseInt(attendanceID) === 1) {
+                                    manDaysCount = 1.5
+                                } else if (parseInt(attendanceID) === 2) {
+                                    manDaysCount = 0.75
+                                } else {
+                                    manDaysCount = 0
+                                }
                             } else {
-                                manDaysCount = 0
+                                if (parseInt(attendanceID) === 1) {
+                                    manDaysCount = 1
+                                }
+                                else if (parseInt(attendanceID) === 2) {
+                                    manDaysCount = 0.5
+                                } else {
+                                    manDaysCount = 0
+                                }
                             }
-                        } else {
-                            if (parseInt(attendanceID) === 1) {
-                                manDaysCount = 1
-                            }
-                            else if (parseInt(attendanceID) === 2) {
-                                manDaysCount = 0.5
-                            } else {
-                                manDaysCount = 0
-                            }
-                        }
 
-                        let dataobj = {
-                            empNo: data.empNo,
-                            groupID: parseInt(attendanceBulkUpload.groupID),
-                            estateID: parseInt(attendanceBulkUpload.factoryID),
-                            mainDivisionID: parseInt(attendanceBulkUpload.mainDivisionID),
-                            divisionID: parseInt(FormDetails.divisionID),
-                            date: (attendanceBulkUpload.date),
-                            musterChitID: parseInt(attendanceBulkUpload.musterChitID),
-                            empName: empData == null ? "" : empData.employeeName,
-                            employeeTypeID: empData == null ? 0 : empData.employeeTypeID,
-                            fieldID: parseInt(FormDetails.fieldID),
-                            divisionID: parseInt(FormDetails.divisionID),
-                            jobID: parseInt(FormDetails.jobTypeID),
-                            workType: parseInt(FormDetails.workTypeID),
-                            lentEstateID: parseInt(FormDetails.lentEstateID),
-                            isTaskComplete: true,
-                            attendenceID: data.dayType.toLowerCase() == "full" ? parseInt(1) : parseInt(2),
-                            dayOtHours: data.dayOtHours == null ? parseFloat(0) : parseFloat(data.dayOtHours),
-                            nightOtHours: data.nightOtHours == null ? parseFloat(0) : parseFloat(data.nightOtHours),
-                            doubleOtHours: data.doubleOtHours == null ? parseFloat(0) : parseFloat(data.doubleOtHours),
-                            isCashJob: data.isCashJob.toLowerCase() == "yes" ? true : false,
-                            operatorID: parseInt(0),
-                            createdBy: tokenDecoder.getUserIDFromToken(),
-                            isHoliday: data.isCashJob.toLowerCase() == "yes" ? false : attendanceBulkUpload.isHoliday,
-                            manDays: parseInt(FormDetails.jobTypeID) === 5 ? parseInt(0) : parseFloat(manDaysCount),
-                            jobCategoryID: parseInt(FormDetails.jobCategoryID),
-                            employeeID: empData == null ? 0 : empData.employeeID
-                        }
-                        return dataobj;
-                    }))
-                    setTableData(datarest);
+                            let dataobj = {
+                                empNo: data.empNo,
+                                groupID: parseInt(attendanceBulkUpload.groupID),
+                                estateID: parseInt(attendanceBulkUpload.factoryID),
+                                mainDivisionID: parseInt(attendanceBulkUpload.mainDivisionID),
+                                divisionID: parseInt(FormDetails.divisionID),
+                                date: (attendanceBulkUpload.date),
+                                musterChitID: parseInt(attendanceBulkUpload.musterChitID),
+                                empName: empData == null ? "" : empData.employeeName,
+                                employeeTypeID: empData == null ? 0 : empData.employeeTypeID,
+                                fieldID: parseInt(FormDetails.fieldID),
+                                divisionID: parseInt(FormDetails.divisionID),
+                                jobID: parseInt(FormDetails.jobTypeID),
+                                workType: parseInt(FormDetails.workTypeID),
+                                lentEstateID: parseInt(FormDetails.lentEstateID),
+                                isTaskComplete: true,
+                                attendenceID: data.dayType.toLowerCase() == "full" ? parseInt(1) : parseInt(2),
+                                dayOtHours: data.dayOtHours == null ? parseFloat(0) : parseFloat(data.dayOtHours),
+                                nightOtHours: data.nightOtHours == null ? parseFloat(0) : parseFloat(data.nightOtHours),
+                                doubleOtHours: data.doubleOtHours == null ? parseFloat(0) : parseFloat(data.doubleOtHours),
+                                isCashJob: data.isCashJob.toLowerCase() == "yes" ? true : false,
+                                operatorID: parseInt(0),
+                                createdBy: tokenDecoder.getUserIDFromToken(),
+                                isHoliday: data.isCashJob.toLowerCase() == "yes" ? false : attendanceBulkUpload.isHoliday,
+                                manDays: parseInt(FormDetails.jobTypeID) === 5 ? parseInt(0) : parseFloat(manDaysCount),
+                                jobCategoryID: parseInt(FormDetails.jobCategoryID),
+                                employeeID: empData == null ? 0 : empData.employeeID
+                            }
+                            return dataobj;
+                        }))
+                        setTableData(datarest);
+                    } else {
+                        alert.error("Incorrect Data Found");
+                    }
                 } else {
-                    alert.error("Incorrect Data Found");
+                    alert.error("Negative values found for OT hours");
                 }
             } else {
                 alert.error("Some Fields Are Empty In The Bulk File");
             }
-
         } else {
             alert.error("Muster Chit Employee Count Exceeded");
         }

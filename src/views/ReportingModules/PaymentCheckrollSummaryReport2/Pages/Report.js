@@ -86,35 +86,38 @@ export default function PaymentCheckrollSummaryReport2(props) {
   const [divisions, setDivision] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [payCheckRollReportData, setPayCheckRollReportData] = useState([]);
+  const [groupedReportData, setGroupedReportData] = useState([]);
   const [permissionList, setPermissions] = useState({
     isGroupFilterEnabled: false,
     isFactoryFilterEnabled: false
   });
-  const [totalValues, setTotalValues] = useState({
-    totalCashAdvance: 0,
-    totalLoan: 0,
-    totalStamp: 0,
-    totalTeaRecovery: 0,
-    totalWelfare: 0,
-    totalCrenchFund: 0,
-    totalFuneralFund: 0,
-    totalUnionRecovery: 0,
-    totalElectricityRecovery: 0,
-    totalPayCards: 0,
-    totalCoopMembership: 0,
-    totalCoopShopRecovery: 0,
-    totalTempleRecovery: 0,
-    totalInsuranceRecovery: 0,
-    totalDhoby: 0,
-    totalBaber: 0,
-    totalWaterSchemeRecovery: 0,
-    totalFoodStuffRecovery: 0,
-    totalFine: 0,
-    totalOtherRecovery: 0,
-    totalToolsRecovery: 0,
-    totalFestivalAdvanceRecovery: 0,
-    totalEPFAmount: 0,
-  });
+  const [totalValues, setTotalValues] = useState([])
+  const [fulltotalValues, setFullTotalValues] = useState({
+        totalCashAdvance:0,
+        totalLoan: 0,
+        totalStamp: 0,
+        totalTeaRecovery: 0,
+        totalWelfare: 0,
+        totalCrenchFund: 0,
+        totalFuneralFund: 0,
+        totalUnionRecovery: 0,
+        totalElectricityRecovery: 0,
+        totalPayCards: 0,
+        totalCoopMembership: 0,
+        totalCoopShopRecovery: 0,
+        totalTempleRecovery: 0,
+        totalInsuranceRecovery: 0,
+        totalDhoby: 0,
+        totalBaber: 0,
+        totalWaterSchemeRecovery: 0,
+        totalFoodStuffRecovery: 0,
+        totalFine: 0,
+        totalOtherRecovery: 0,
+        totalToolsRecovery: 0,
+        totalFestivalAdvanceRecovery: 0,
+        totalOtherDeductions: 0,
+        totalEPFAmount: 0
+      })
   const [deductDetailsList, setDeductDetailsList] = useState([]);
   const navigate = useNavigate();
   const [isTableHide, setIsTableHide] = useState(false);
@@ -168,8 +171,15 @@ export default function PaymentCheckrollSummaryReport2(props) {
   }, [payCheckRollReportDetail.divisionID, payCheckRollReportDetail.month, payCheckRollReportDetail.year]);
 
   useEffect(() => {
-    if (payCheckRollReportData.length != 0) {
+    if (groupedReportData.length != 0) {
       calculateTotalQty()
+      calculateTotal()
+    }
+  }, [groupedReportData]);
+
+  useEffect(() => {
+    if (payCheckRollReportData.length != 0) {
+      calculateTotal()
     }
   }, [payCheckRollReportData]);
 
@@ -240,7 +250,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
     let model = {
       groupID: parseInt(payCheckRollReportDetail.groupID),
       estateID: parseInt(payCheckRollReportDetail.estateID),
-      divisionID: payCheckRollReportDetail.divisionID == 0 ? null : parseInt(payCheckRollReportDetail.divisionID),
+      divisionID: parseInt(payCheckRollReportDetail.divisionID),
       year: payCheckRollReportDetail.year.toString(),
       month: payCheckRollReportDetail.month.toString(),
     };
@@ -257,6 +267,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
             groupedDeductDetails[key] = {
               registrationNumber: y.registrationNumber,
               employeeName: y.employeeName,
+              division: y.divisionName,
               cashAdvance: y.cashAdvance,
               loan: y.loan,
               epfAmount: y.epfAmount,
@@ -373,6 +384,15 @@ export default function PaymentCheckrollSummaryReport2(props) {
       });
 
       const groupedDeductDetailsList = Object.values(groupedDeductDetails);
+      const groupedData = groupedDeductDetailsList.reduce((acc, item) => {
+        if (!acc[item.division]) {
+          acc[item.division] = [];
+        }
+        acc[item.division].push(item);
+        return acc;
+      }, {});
+
+      setGroupedReportData(groupedData)
       setDeductDetailsList(groupedDeductDetailsList);
       setPayCheckRollReportData(customerData.data);
       setIsTableHide(true);
@@ -383,120 +403,191 @@ export default function PaymentCheckrollSummaryReport2(props) {
   }
 
   function calculateTotalQty() {
-    const totalCashAdvance = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.cashAdvance, 0);
-    const totalLoan = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.loan, 0);
-    const totalStamp = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.stamp), 0);
-    const totalTeaRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.teaRecovery), 0);
-    const totalWelfare = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.welfare), 0);
-    const totalCrenchFund = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.crenchFund), 0);
-    const totalFuneralFund = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.funeralFund), 0);
-    const totalUnionRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.unionRecovery), 0);
-    const totalElectricityRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.electricityRecovery), 0);
-    const totalPayCards = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.payCards), 0);
-    const totalCoopMembership = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.coopMembership), 0);
-    const totalCoopShopRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.coopShopRecovery), 0);
-    const totalTempleRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.templeRecovery), 0);
-    const totalInsuranceRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.insuranceRecovery), 0);
-    const totalDhoby = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.dhoby), 0);
-    const totalBaber = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.baber), 0);
-    const totalWaterSchemeRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.waterSchemeRecovery), 0);
-    const totalFoodStuffRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.foodStuffRecovery), 0);
-    const totalFine = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.fine), 0);
-    const totalOtherRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.otherRecovery), 0);
-    const totalToolsRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.toolsRecovery), 0);
-    const totalFestivalAdvanceRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.festivalAdvanceRecovery), 0);
-    const totalOtherDeductions = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.otherDeductions), 0);
-    const totalEPFAmount = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.epfAmount, 0);
+    let totalVal = []
+    for (let item of Object.entries(groupedReportData)) {
+      const totalCashAdvance = item[1].reduce((accumulator, current) => accumulator + current.cashAdvance, 0);
+      const totalLoan = item[1].reduce((accumulator, current) => accumulator + current.loan, 0);
+      const totalStamp = item[1].reduce((accumulator, current) => accumulator + (current.stamp), 0);
+      const totalTeaRecovery = item[1].reduce((accumulator, current) => accumulator + (current.teaRecovery), 0);
+      const totalWelfare = item[1].reduce((accumulator, current) => accumulator + (current.welfare), 0);
+      const totalCrenchFund = item[1].reduce((accumulator, current) => accumulator + (current.crenchFund), 0);
+      const totalFuneralFund = item[1].reduce((accumulator, current) => accumulator + (current.funeralFund), 0);
+      const totalUnionRecovery = item[1].reduce((accumulator, current) => accumulator + (current.unionRecovery), 0);
+      const totalElectricityRecovery = item[1].reduce((accumulator, current) => accumulator + (current.electricityRecovery), 0);
+      const totalPayCards = item[1].reduce((accumulator, current) => accumulator + (current.payCards), 0);
+      const totalCoopMembership = item[1].reduce((accumulator, current) => accumulator + (current.coopMembership), 0);
+      const totalCoopShopRecovery = item[1].reduce((accumulator, current) => accumulator + (current.coopShopRecovery), 0);
+      const totalTempleRecovery = item[1].reduce((accumulator, current) => accumulator + (current.templeRecovery), 0);
+      const totalInsuranceRecovery = item[1].reduce((accumulator, current) => accumulator + (current.insuranceRecovery), 0);
+      const totalDhoby = item[1].reduce((accumulator, current) => accumulator + (current.dhoby), 0);
+      const totalBaber = item[1].reduce((accumulator, current) => accumulator + (current.baber), 0);
+      const totalWaterSchemeRecovery = item[1].reduce((accumulator, current) => accumulator + (current.waterSchemeRecovery), 0);
+      const totalFoodStuffRecovery = item[1].reduce((accumulator, current) => accumulator + (current.foodStuffRecovery), 0);
+      const totalFine = item[1].reduce((accumulator, current) => accumulator + (current.fine), 0);
+      const totalOtherRecovery = item[1].reduce((accumulator, current) => accumulator + (current.otherRecovery), 0);
+      const totalToolsRecovery = item[1].reduce((accumulator, current) => accumulator + (current.toolsRecovery), 0);
+      const totalFestivalAdvanceRecovery = item[1].reduce((accumulator, current) => accumulator + (current.festivalAdvanceRecovery), 0);
+      const totalOtherDeductions = item[1].reduce((accumulator, current) => accumulator + (current.otherDeductions), 0);
+      const totalEPFAmount = item[1].reduce((accumulator, current) => accumulator + current.epfAmount, 0);
 
-    setTotalValues({
-      ...totalValues,
-      totalCashAdvance: totalCashAdvance,
-      totalLoan: totalLoan,
-      totalStamp: totalStamp,
-      totalTeaRecovery: totalTeaRecovery,
-      totalWelfare: totalWelfare,
-      totalCrenchFund: totalCrenchFund,
-      totalFuneralFund: totalFuneralFund,
-      totalUnionRecovery: totalUnionRecovery,
-      totalElectricityRecovery: totalElectricityRecovery,
-      totalPayCards: totalPayCards,
-      totalCoopMembership: totalCoopMembership,
-      totalCoopShopRecovery: totalCoopShopRecovery,
-      totalTempleRecovery: totalTempleRecovery,
-      totalInsuranceRecovery: totalInsuranceRecovery,
-      totalDhoby: totalDhoby,
-      totalBaber: totalBaber,
-      totalWaterSchemeRecovery: totalWaterSchemeRecovery,
-      totalFoodStuffRecovery: totalFoodStuffRecovery,
-      totalFine: totalFine,
-      totalOtherRecovery: totalOtherRecovery,
-      totalToolsRecovery: totalToolsRecovery,
-      totalFestivalAdvanceRecovery: totalFestivalAdvanceRecovery,
-      totalOtherDeductions: totalOtherDeductions,
-      totalEPFAmount: totalEPFAmount
+      let model = {
+        division: item[0],
+        totalCashAdvance: totalCashAdvance,
+        totalLoan: totalLoan,
+        totalStamp: totalStamp,
+        totalTeaRecovery: totalTeaRecovery,
+        totalWelfare: totalWelfare,
+        totalCrenchFund: totalCrenchFund,
+        totalFuneralFund: totalFuneralFund,
+        totalUnionRecovery: totalUnionRecovery,
+        totalElectricityRecovery: totalElectricityRecovery,
+        totalPayCards: totalPayCards,
+        totalCoopMembership: totalCoopMembership,
+        totalCoopShopRecovery: totalCoopShopRecovery,
+        totalTempleRecovery: totalTempleRecovery,
+        totalInsuranceRecovery: totalInsuranceRecovery,
+        totalDhoby: totalDhoby,
+        totalBaber: totalBaber,
+        totalWaterSchemeRecovery: totalWaterSchemeRecovery,
+        totalFoodStuffRecovery: totalFoodStuffRecovery,
+        totalFine: totalFine,
+        totalOtherRecovery: totalOtherRecovery,
+        totalToolsRecovery: totalToolsRecovery,
+        totalFestivalAdvanceRecovery: totalFestivalAdvanceRecovery,
+        totalOtherDeductions: totalOtherDeductions,
+        totalEPFAmount: totalEPFAmount
+      }
+      totalVal.push(model)
     }
-    )
+    setTotalValues(totalVal)
   }
+
+  function calculateTotal() {
+    
+      const totalCashAdvance = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.cashAdvance, 0);
+      const totalLoan = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.loan, 0);
+      const totalStamp = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.stamp), 0);
+      const totalTeaRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.teaRecovery), 0);
+      const totalWelfare = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.welfare), 0);
+      const totalCrenchFund = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.crenchFund), 0);
+      const totalFuneralFund = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.funeralFund), 0);
+      const totalUnionRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.unionRecovery), 0);
+      const totalElectricityRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.electricityRecovery), 0);
+      const totalPayCards = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.payCards), 0);
+      const totalCoopMembership = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.coopMembership), 0);
+      const totalCoopShopRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.coopShopRecovery), 0);
+      const totalTempleRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.templeRecovery), 0);
+      const totalInsuranceRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.insuranceRecovery), 0);
+      const totalDhoby = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.dhoby), 0);
+      const totalBaber = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.baber), 0);
+      const totalWaterSchemeRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.waterSchemeRecovery), 0);
+      const totalFoodStuffRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.foodStuffRecovery), 0);
+      const totalFine = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.fine), 0);
+      const totalOtherRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.otherRecovery), 0);
+      const totalToolsRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.toolsRecovery), 0);
+      const totalFestivalAdvanceRecovery = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.festivalAdvanceRecovery), 0);
+      const totalOtherDeductions = payCheckRollReportData.reduce((accumulator, current) => accumulator + (current.otherDeductions), 0);
+      const totalEPFAmount = payCheckRollReportData.reduce((accumulator, current) => accumulator + current.epfAmount, 0);
+
+      setFullTotalValues({
+        ...fulltotalValues,
+        totalCashAdvance: totalCashAdvance,
+        totalLoan: totalLoan,
+        totalStamp: totalStamp,
+        totalTeaRecovery: totalTeaRecovery,
+        totalWelfare: totalWelfare,
+        totalCrenchFund: totalCrenchFund,
+        totalFuneralFund: totalFuneralFund,
+        totalUnionRecovery: totalUnionRecovery,
+        totalElectricityRecovery: totalElectricityRecovery,
+        totalPayCards: totalPayCards,
+        totalCoopMembership: totalCoopMembership,
+        totalCoopShopRecovery: totalCoopShopRecovery,
+        totalTempleRecovery: totalTempleRecovery,
+        totalInsuranceRecovery: totalInsuranceRecovery,
+        totalDhoby: totalDhoby,
+        totalBaber: totalBaber,
+        totalWaterSchemeRecovery: totalWaterSchemeRecovery,
+        totalFoodStuffRecovery: totalFoodStuffRecovery,
+        totalFine: totalFine,
+        totalOtherRecovery: totalOtherRecovery,
+        totalToolsRecovery: totalToolsRecovery,
+        totalFestivalAdvanceRecovery: totalFestivalAdvanceRecovery,
+        totalOtherDeductions: totalOtherDeductions,
+        totalEPFAmount: totalEPFAmount
+      })
+  }
+
+  const groupedData = totalValues.reduce((acc, item) => {
+    if (!acc[item.division]) {
+      acc[item.division] = [];
+    }
+    acc[item.division].push(item);
+    return acc;
+  }, {});
 
   async function createDataForExcel(array) {
     var res = [];
     if (array != null) {
-      array.map(x => {
-        var vr = {
-          'Employee No': x.registrationNumber,
-          'Employee Name': x.employeeName,
-          'Loan (Rs.)': x.loan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Stamp (Rs.)': x.stamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Tea Recovery (Rs.)': x.teaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Welfare (Rs.)': x.welfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Crech Fund (Rs.)': x.crenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Funeral Fund (Rs.)': x.funeralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Union Recovery (Rs.)': x.unionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Electricity Recovery (Rs.)': x.electricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Pay Cards (Rs.)': x.payCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Co op Membership (Rs.)': x.coopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Co op Shop Recovery (Rs.)': x.coopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Temple Recovery (Rs.)': x.templeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Insurance Recovery (Rs.)': x.insuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Dhoby (Rs.)': x.dhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Baber (Rs.)': x.baber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Water Scheme Recovery (Rs.)': x.waterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Fine (Rs.)': x.fine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Other Recovery (Rs.)': x.otherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Tools Recovery (Rs.)': x.toolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Festival Advance Recovery (Rs.)': x.festivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Other Deductions (Rs.)': x.otherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'EPF (10%)': x.epfAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        }
-        res.push(vr);
-      });
-      res.push({});
-      var vr = {
-        'Employee No': 'Total',
-        'Loan (Rs.)': totalValues.totalLoan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Stamp (Rs.)': totalValues.totalStamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Tea Recovery (Rs.)': totalValues.totalTeaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Welfare (Rs.)': totalValues.totalWelfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Crech Fund (Rs.)': totalValues.totalCrenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Funeral Fund (Rs.)': totalValues.totalFuneralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Union Recovery (Rs.)': totalValues.totalUnionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Electricity Recovery (Rs.)': totalValues.totalElectricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Pay Cards (Rs.)': totalValues.totalPayCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Co op Membership (Rs.)': totalValues.totalCoopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Co op Shop Recovery (Rs.)': totalValues.totalCoopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Temple Recovery (Rs.)': totalValues.totalTempleRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Insurance Recovery (Rs.)': totalValues.totalInsuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Dhoby (Rs.)': totalValues.totalDhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Baber (Rs.)': totalValues.totalBaber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Water Scheme Recovery (Rs.)': totalValues.totalWaterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Fine (Rs.)': totalValues.totalFine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Other Recovery (Rs.)': totalValues.totalOtherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Tools Recovery (Rs.)': totalValues.totalToolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Festival Advance Recovery (Rs.)': totalValues.totalFestivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'Other Deductions (Rs.)': totalValues.totalOtherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-        'EPF (10%)': totalValues.totalEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      };
-      res.push(vr);
+      Object.keys(array).map((division, catIndex) => (
+        array[division].map((x, i) => {
+          var vr = {
+            'Employee No': x.registrationNumber,
+            'Employee Name': x.employeeName,
+            'Loan (Rs.)': x.loan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Stamp (Rs.)': x.stamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Tea Recovery (Rs.)': x.teaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Welfare (Rs.)': x.welfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Crech Fund (Rs.)': x.crenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Funeral Fund (Rs.)': x.funeralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Union Recovery (Rs.)': x.unionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Electricity Recovery (Rs.)': x.electricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Pay Cards (Rs.)': x.payCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Co op Membership (Rs.)': x.coopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Co op Shop Recovery (Rs.)': x.coopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Temple Recovery (Rs.)': x.templeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Insurance Recovery (Rs.)': x.insuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Dhoby (Rs.)': x.dhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Baber (Rs.)': x.baber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Water Scheme Recovery (Rs.)': x.waterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Fine (Rs.)': x.fine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Other Recovery (Rs.)': x.otherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Tools Recovery (Rs.)': x.toolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Festival Advance Recovery (Rs.)': x.festivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Other Deductions (Rs.)': x.otherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'EPF (10%)': x.epfAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          }
+          res.push(vr);
+        }),
+        groupedData[division].map((row, i) => {
+          var vr = {
+            'Employee No': 'Total',
+            'Loan (Rs.)': row.totalLoan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Stamp (Rs.)': row.totalStamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Tea Recovery (Rs.)': row.totalTeaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Welfare (Rs.)': row.totalWelfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Crech Fund (Rs.)': row.totalCrenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Funeral Fund (Rs.)': row.totalFuneralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Union Recovery (Rs.)': row.totalUnionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Electricity Recovery (Rs.)': row.totalElectricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Pay Cards (Rs.)': row.totalPayCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Co op Membership (Rs.)': row.totalCoopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Co op Shop Recovery (Rs.)': row.totalCoopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Temple Recovery (Rs.)': row.totalTempleRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Insurance Recovery (Rs.)': row.totalInsuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Dhoby (Rs.)': row.totalDhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Baber (Rs.)': row.totalBaber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Water Scheme Recovery (Rs.)': row.totalWaterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Fine (Rs.)': row.totalFine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Other Recovery (Rs.)': row.totalOtherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Tools Recovery (Rs.)': row.totalToolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Festival Advance Recovery (Rs.)': row.totalFestivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'Other Deductions (Rs.)': row.totalOtherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            'EPF (10%)': row.totalEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          };
+          res.push(vr);
+        })
+      ))
 
       res.push({});
       var vr = {
@@ -512,7 +603,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
   }
 
   async function createFile() {
-    var file = await createDataForExcel(payCheckRollReportData);
+    var file = await createDataForExcel(groupedReportData);
     var settings = {
       sheetName: 'Pay CheckRoll',
       fileName: 'Payment CheckRoll Summary Report 2 - ' + payCheckRollReportDetail.month + '/' + payCheckRollReportDetail.year,
@@ -566,6 +657,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
     var month = (date.getUTCMonth() + 1).toString().padStart(2, '0'); //months from 1-12
     var year = date.getUTCFullYear();
     let monthName = monthNames[month - 1];
+    console.log(monthName)
     setSelectedSearchValues({
       ...selectedSearchValues,
       monthName: monthName
@@ -575,7 +667,6 @@ export default function PaymentCheckrollSummaryReport2(props) {
       month: month.toString(),
       year: year.toString()
     });
-
     setSelectedDate(date);
   }
 
@@ -584,7 +675,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
       ...selectedSearchValues,
       estateID: estateList[searchForm.estateID],
       groupID: GroupList[searchForm.groupID],
-      divisionID: divisions[searchForm.divisionID],
+      divisionID: divisions[searchForm.divisionID] == 0 ? 'All' : divisions[searchForm.divisionID],
       year: searchForm.year,
       month: searchForm.month
     });
@@ -617,9 +708,6 @@ export default function PaymentCheckrollSummaryReport2(props) {
               estateID: Yup.number()
                 .required('Estate required')
                 .min('1', 'Factory required'),
-              divisionID: Yup.number()
-                .required('Division is required')
-                .min('1', 'Division is required')
             })}
             enableReinitialize
           >
@@ -684,7 +772,7 @@ export default function PaymentCheckrollSummaryReport2(props) {
 
                           <Grid item md={4} xs={8}>
                             <InputLabel shrink id="divisionID">
-                              Division *
+                              Division
                             </InputLabel>
                             <TextField
                               select
@@ -773,60 +861,103 @@ export default function PaymentCheckrollSummaryReport2(props) {
                                   </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                  {payCheckRollReportData.map((row, i) => (
-                                    <TableRow style={{ border: "2px solid black" }} key={i}>
-                                      <TableCell component="th" scope="row" className={`${classes.stickyColumn}`} align="left" style={{ border: "1px solid black" }}> {row.registrationNumber}</TableCell>
-                                      <TableCell component="th" scope="row" className={`${classes.stickyColumn}`} align="left" style={{ left: 79, border: "1px solid black" }}> {row.employeeName}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.loan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.stamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.teaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.welfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.crenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.funeralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.unionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.electricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.payCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.coopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.coopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.templeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.insuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.dhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.baber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.waterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.fine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.otherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.toolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.festivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.otherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                      <TableCell component="th" scope="row" align="right" style={{ border: "1px solid black" }}> {row.epfAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                    </TableRow>
+                                  {Object.keys(groupedReportData).map((division, catIndex) => (
+                                    <React.Fragment key={catIndex}>
+                                      <TableRow>
+                                        <TableCell colSpan={20} align="left" style={{ fontWeight: 'bold', border: "1px solid black" }}>
+                                          {division}
+                                        </TableCell>
+                                      </TableRow>
+                                      {groupedReportData[division].map((row, i) => {
+                                        const labelId = `enhanced-table-checkbox-${catIndex}-${i}`;
+                                        return (
+                                          <TableRow style={{ border: "2px solid black" }} key={i}>
+                                            <TableCell component="th" id={labelId} scope="row" className={`${classes.stickyColumn}`} align="left" style={{ border: "1px solid black" }}> {row.registrationNumber}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" className={`${classes.stickyColumn}`} align="left" style={{ left: 79, border: "1px solid black" }}> {row.employeeName}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.loan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.stamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.teaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.welfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.crenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.funeralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.unionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.electricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.payCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.coopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.coopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.templeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.insuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.dhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.baber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.waterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.fine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.otherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.toolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.festivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.otherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell component="th" id={labelId} scope="row" align="right" style={{ border: "1px solid black" }}> {row.epfAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                          </TableRow>
+                                        )
+                                      })}
+                                      {groupedData[division].map((row, i) => {
+                                        return (
+                                          <TableRow style={{ border: "2px solid black" }}>
+                                            <TableCell className={`${classes.stickyColumn}`} colSpan={2} align={'center'} style={{ borderBottom: "none", border: "1px solid black", fontSize: '16px', color: "black" }} ><b><strong>Sub Total</strong></b></TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalLoan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} </TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalStamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalTeaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalWelfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalCrenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalFuneralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalUnionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalElectricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalPayCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalCoopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalCoopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalTempleRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalInsuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalDhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalBaber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalWaterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalFine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalOtherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalToolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalFestivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalOtherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                            <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "black" }}>{row.totalEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                          </TableRow>
+                                        )
+                                      })}
+                                    </React.Fragment>
                                   ))}
+                                  {payCheckRollReportDetail.divisionID == 0 ? 
+                                  <TableRow style={{ border: "2px solid black" }}>
+                                    <TableCell className={`${classes.stickyColumn}`} colSpan={2} align={'center'} style={{ borderBottom: "none", border: "1px solid black", fontSize: '16px', color: "red" }} ><b><strong>Total</strong></b></TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalLoan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} </TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalStamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalTeaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalWelfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalCrenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalFuneralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalUnionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalElectricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalPayCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalCoopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalCoopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalTempleRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalInsuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalDhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalBaber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalWaterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalFine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalOtherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalToolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalFestivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalOtherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                    <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{fulltotalValues.totalEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                  </TableRow>
+                                  :null}
                                 </TableBody>
-                                <TableRow style={{ border: "2px solid black" }}>
-                                  <TableCell className={`${classes.stickyColumn}`} colSpan={2} align={'center'} style={{ borderBottom: "none", border: "1px solid black", fontSize: '16px', color: "red" }} ><b><strong>Total</strong></b></TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalLoan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} </TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalStamp.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalTeaRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalWelfare.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalCrenchFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalFuneralFund.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalUnionRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalElectricityRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalPayCards.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalCoopMembership.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalCoopShopRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalTempleRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalInsuranceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalDhoby.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalBaber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalWaterSchemeRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalFine.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalOtherRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalToolsRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalFestivalAdvanceRecovery.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalOtherDeductions.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                  <TableCell align={'right'} style={{ fontWeight: "bold", borderBottom: "none", border: "1px solid black", color: "red" }}>{totalValues.totalEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                </TableRow>
                               </Table>
                             </TableContainer>
                             : null}
@@ -835,18 +966,20 @@ export default function PaymentCheckrollSummaryReport2(props) {
 
                       {payCheckRollReportData.length > 0 && isTableHide ? (
                         <Box display="flex" justifyContent="flex-end" p={2}>
-                          <Button
-                            color="primary"
-                            id="btnRecord"
-                            type="submit"
-                            variant="contained"
-                            style={{ marginRight: '1rem' }}
-                            className={classes.colorRecord}
-                            onClick={createFile}
-                            size="small"
-                          >
-                            EXCEL
-                          </Button>
+                          {payCheckRollReportDetail.divisionID != 0 ?
+                            <Button
+                              color="primary"
+                              id="btnRecord"
+                              type="submit"
+                              variant="contained"
+                              style={{ marginRight: '1rem' }}
+                              className={classes.colorRecord}
+                              onClick={createFile}
+                              size="small"
+                            >
+                              EXCEL
+                            </Button>
+                            : null}
                           <div>&nbsp;</div>
 
                           {<ReactToPrint
@@ -871,8 +1004,9 @@ export default function PaymentCheckrollSummaryReport2(props) {
                               ref={componentRef}
                               selectedSearchValues={selectedSearchValues}
                               payCheckRollReportDetail={payCheckRollReportDetail}
-                              payCheckRollReportData={payCheckRollReportData}
-                              totalValues={totalValues}
+                              payCheckRollReportData={groupedReportData}
+                              totalValues={groupedData}
+                              fulltotalValues={fulltotalValues}
                             />
                           </div>}
                         </Box>

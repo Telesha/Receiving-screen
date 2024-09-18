@@ -65,7 +65,7 @@ export default function LankemReceivingAddEdit(props) {
   const [transactionTypes, setTransactionTypes] = useState();
   const [groups, setGroups] = useState();
   const [customers, setCustomers] = useState();
-  const [customerAuto, setCustomersAuto] = useState();
+  const [customersAuto, setCustomersAuto] = useState();
   const [payVoucherCode, setPayVoucherCode] = useState();
   const [voucherTypes, setVoucherTypes] = useState([]);
   const [transactionModes, setTransactionModes] = useState([]);
@@ -90,7 +90,6 @@ export default function LankemReceivingAddEdit(props) {
   const [approveButtonEnabled, setApproveButtonEnabled] = useState(false);
   const [interEstateButtonEnable, setInterEstateButtonEnable] = useState(false);
   const [isInterStatus, setIsInterStatus] = useState(false);
-  const [customerCommon, setCustomerCommon] = useState(false);
   const [ledgerAccountTRCode, setledgerAccountTRCode] = useState([]);
   const [permissionList, setPermissions] = useState({
     isGroupFilterEnabled: false,
@@ -114,15 +113,12 @@ export default function LankemReceivingAddEdit(props) {
     transactionMode: '0',
     recipientName: '',
     address: '',
-    modeoftransaction: '0',
-    modeoftransactionNumber: '',
     customerID: '0',
     isInterEstate: false,
     interEstateID: '0',
-    ledgerAccountTRCode: '',
-    receiver: ''
+    ledgerAccountTRCode: ''
   });
- 
+
   const maxDate = new Date();
   const handleClick = () => {
     navigate('/app/LankemReceiving/listing');
@@ -143,11 +139,6 @@ export default function LankemReceivingAddEdit(props) {
       trackPromise(getfactoriesForDropDown());
     }
   }, [generalJournal.groupID]);
-  useEffect(() => {
-    if (generalJournal.isInterEstate && parseInt(generalJournal.interEstateID) !== 0) {
-      trackPromise(getReferenceNumberInter());
-    }
-  }, [voucherCodeRef, generalJournal.isInterEstate, generalJournal.interEstateID]);
 
   useEffect(() => {
     if (generalJournal.factoryID.toString() !== "0") {
@@ -221,7 +212,13 @@ export default function LankemReceivingAddEdit(props) {
     }
   }, [generalJournal.ledgerAccountTRCode]);
 
- 
+  useEffect(() => {
+    if (generalJournal.isInterEstate == true) {
+      setInterEstateButtonEnable(true)
+    } else {
+      setInterEstateButtonEnable(false)
+    }
+  }, [generalJournal.isInterEstate]);
 
   async function getPermissions() {
     var permissions = await authService.getPermissionsByScreen(screenCode);
@@ -249,7 +246,16 @@ export default function LankemReceivingAddEdit(props) {
     })
   }
 
-  
+  // async function getReferenceNumber(voucherCode) {
+  //   let refModel = {
+  //     groupID: generalJournal.groupID,
+  //     factoryID: generalJournal.factoryID,
+  //     date: selectedDate.toISOString().split('-')[0],
+  //     voucherCode: voucherCode,
+  //   }
+  //   const ref = await services.getReferenceNumber(refModel);
+  //   setRefNo(ref.data);
+  // }
 
   async function getReferenceNumber() {
     let refModel = {
@@ -504,7 +510,6 @@ export default function LankemReceivingAddEdit(props) {
         customerID: generalJournal.customerID,
         tranLedgerAccountID: generalJournal.tranLedgerAccountID,
         status: approveButtonEnabled == true ? parseInt(2) : parseInt(1),
-        receiver: generalJournal.receiver,
       };
 
       // let change = calOutOfBalance();
@@ -626,7 +631,6 @@ export default function LankemReceivingAddEdit(props) {
     return items
   }
 
-
   // function generateDropownForTransactionModeList(dataList) {
   //   let items = []
   //   if (dataList != null) {
@@ -683,47 +687,11 @@ export default function LankemReceivingAddEdit(props) {
   function handleChangeForm(e) {
     const target = e.target;
     const value = target.value
-  setGeneralJournal({
-      ...generalJournal,
-      [e.target.name]: value
-    });
-  }
 
-  function handleChangeCustomer(e) {
-    const target = e.target;
-    const value = target.value;
     setGeneralJournal({
       ...generalJournal,
       [e.target.name]: value
     });
-    if ((value > 0) && (customers[value].code == 'COMMON')) {
-      setCustomerCommon(true);
-    } else {
-      setCustomerCommon(false);
-    }
-  }
-
-  function handleSearchDropdownChangeFieldsCustomer(data, e) {
-    if (data === undefined || data === null) {
-      setGeneralJournal({
-        ...generalJournal,
-        customerID: '0'
-      });
-      return;
-    } else {
-      var valueV = data["customerID"];
-      var valueC = data["customerCode"];
-      setGeneralJournal({
-        ...generalJournal,
-        customerID: valueV
-      });
-
-      if ((parseInt(valueV) > 0) && (valueC == 'COMMON')) {
-        setCustomerCommon(true);
-      } else {
-        setCustomerCommon(false);
-      }
-    }
   }
 
   function cardTitle(titleName) {
@@ -1016,19 +984,15 @@ export default function LankemReceivingAddEdit(props) {
               chequeNumber: generalJournal.chequeNumber,
               isActive: generalJournal.isActive,
               tranLedgerAccountID: generalJournal.tranLedgerAccountID,
-              modeoftransaction: generalJournal.modeoftransaction,
-              modeoftransactionNumber: generalJournal.modeoftransactionNumber,
               customerID: generalJournal.customerID,
-              receiver: generalJournal.receiver,
-              customerCommon: customerCommon,
               isInterEstate: generalJournal.isInterEstate,
               interEstateID: generalJournal.interEstateID
             }}
             validationSchema={
               Yup.object().shape({
-                 groupID: Yup.number().required('Group required').min("1", 'Group required'),
-                 factoryID: Yup.number().required('Factory required').min("1", 'Factory required'),
-                 referenceNumber: Yup.string().required('Reference number required'),
+                // groupID: Yup.number().required('Group required').min("1", 'Group required'),
+                // factoryID: Yup.number().required('Factory required').min("1", 'Factory required'),
+                // referenceNumber: Yup.string().required('Reference number required'),
                 // voucherType: Yup.number().required('Voucher Type required').min("1", 'Voucher Type required'),
                 // transactionMode: Yup.number().required('Transaction Mode required').min("1", 'Transaction Mode required'),
                 // chequeNumber: Yup.string().when("payModeID",
@@ -1043,24 +1007,8 @@ export default function LankemReceivingAddEdit(props) {
                 //     .required('Inter Estate required')
                 //     .min(1, 'Inter Estate required'),
                 // }),
-                tranLedgerAccountID: Yup.number().required('Ledger Account is required').min('1', 'Ledger Account is required'),
-              customerID: Yup.number().required('Customer required').min('1', 'Customer required'),
-              modeoftransaction: Yup.number().required('Mode of transaction required').min("1", 'Select Mode of transaction'),
-              modeoftransactionNumber: Yup.string().when('modeoftransaction', {
-                is: (areaType) => areaType > 0 && areaType == 1,
-                then: Yup.string().required('Number is required').matches(/^\d+$/, 'Enter valid Number.').nullable()
-              }),
-              customerID: Yup.number()
-                .required('Customer required')
-                .min('1', 'Customer required'),
-                customerCommon: Yup.bool(),
-                receiver: Yup.string().when('customerCommon', {
-                is: (customerCommon) => customerCommon == true,
-                then: Yup.string()
-                  .required('Receiver required').matches(/^[a-zA-Z\.][a-zA-Z\s\.]*$/, 'Special characters are not allowed'),
-                otherwise: Yup.string().nullable(),
               })
-            })}
+            }
             onSubmit={(event) => trackPromise(SaveGeneralJournal(event))}
             enableReinitialize
           >
@@ -1266,61 +1214,6 @@ export default function LankemReceivingAddEdit(props) {
                               }}
                             />
                           </Grid>
-                          
-                          <Grid item md={4} xs={12}>
-                            <InputLabel shrink id="modeoftransaction">
-                              Mode of transaction *
-                            </InputLabel>
-                            <TextField
-                              select
-                              error={Boolean(touched.modeoftransaction && errors.modeoftransaction)}
-                              fullWidth
-                              helperText={touched.modeoftransaction && errors.modeoftransaction}
-                              name="modeoftransaction"
-                              size="small"
-                              onBlur={handleBlur}
-                              onChange={e => { handleChangeForm(e); }}
-                              value={generalJournal.modeoftransaction}
-                              variant="outlined"
-                              id="modeoftransaction"
-                              InputProps={{
-                                readOnly: isUpdate ? true : false
-                              }}
-                            >
-                              <MenuItem value="0">--Select Transaction Mode--</MenuItem>
-                              <MenuItem value="1"> Cheque </MenuItem>
-                              <MenuItem value="2"> Fund Transfer </MenuItem>
-                              <MenuItem value="3"> Cash </MenuItem>
-                            </TextField>
-                          </Grid>
-                          {generalJournal.modeoftransaction > 0 && generalJournal.modeoftransaction != 3 ?
-                            <Grid item md={4} xs={12}>
-                              {generalJournal.modeoftransaction == 1 ?
-                                <InputLabel shrink id="modeoftransactionNumber">
-                                  Cheque Number *
-                                </InputLabel> :
-                                <InputLabel shrink id="modeoftransactionNumber">
-                                  Fund Transfer Number
-                                </InputLabel>}
-                              <TextField
-                                error={Boolean(touched.modeoftransactionNumber && errors.modeoftransactionNumber)}
-                                fullWidth
-                                helperText={touched.modeoftransactionNumber && errors.modeoftransactionNumber}
-                                name="modeoftransactionNumber"
-                                size="small"
-                                onBlur={handleBlur}
-                                onChange={e => handleChangeForm(e)}
-                                value={generalJournal.modeoftransactionNumber}
-                                variant="outlined"
-                              />
-                              {generalJournal.modeoftransaction == 1 ?
-                                <typography style={{ fontSize: '12px', fontFamily: "Roboto" }}>
-                                  Please Enter : [ Cheque Number_Bank Code_Branch Code ]
-                                </typography> : null}
-                            </Grid> : null}
-
-
-
                           {/* <Grid item md={4} xs={12}>
                             <InputLabel shrink id="customerID"
                             >
@@ -1348,11 +1241,11 @@ export default function LankemReceivingAddEdit(props) {
                           </Grid> */}
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="customerID">
-                            Customer *
+                              Customer *
                             </InputLabel>
                             <Autocomplete
                               id="customerID"
-                              options={customerAuto}
+                              options={customersAuto}
                               getOptionLabel={(option) => option.customerName != null ? option.customerName.toString() : null}
                               onChange={(e, value) => handleSearchDropdownChangeFieldsCustomer(value, e)}
                               defaultValue={null}
@@ -1369,36 +1262,11 @@ export default function LankemReceivingAddEdit(props) {
                                   onBlur={handleBlur}
                                   error={Boolean(touched.customerID && errors.customerID)}
                                 >
-                                  <MenuItem value='0' >--Select Customer--</MenuItem>
-                                   </TextField>
+                                  <MenuItem value={'0'} >--Select Customer--</MenuItem>
+                                </TextField>
                               }
                             />
                           </Grid>
-                          {customerCommon ?
-                            <Grid item md={4} xs={12}>
-                            <InputLabel shrink id="receiver">
-                            Receiver *
-                            </InputLabel>
-                            <TextField
-                              error={Boolean(
-                                touched.receiver && errors.receiver
-                              )}
-                              fullWidth
-                              helperText={
-                                touched.receiver && errors.receiver
-                              }
-                              name="receiver"
-                              size="small"
-                              onBlur={handleBlur}
-                              onChange={e => handleChangeForm(e)}
-                              value={generalJournal.receiver}
-                              variant="outlined"
-                              disabled={isDisableButton}
-                              id="receiver"
-                            />
-                          </Grid>
-                          : null}
-                          
                           {transactionModeCode == 'CH' ?
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="chequeNumber" style={{ marginBottom: '-8px' }}>

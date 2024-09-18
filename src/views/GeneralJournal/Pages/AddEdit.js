@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useRef } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
   Box, Card, Grid, TextField, makeStyles, Container, Button, CardContent, Divider, InputLabel, Switch, CardHeader, MenuItem, setRef, TableBody,
@@ -12,7 +12,7 @@ import {
 import Page from 'src/components/Page';
 import services from '../Services';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Formik, validateYupSchema } from 'formik';
+import { Formik } from 'formik';
 import * as Yup from "yup";
 import PageHeader from 'src/views/Common/PageHeader';
 import { useAlert } from "react-alert";
@@ -49,7 +49,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 var screenCode = "GENERALJOURNAL"
-export default function GeneralJournalAddEdit(props) {
+export default function GeneralJournalAddEdit() {
 
   const navigate = useNavigate();
   const alert = useAlert();
@@ -61,7 +61,6 @@ export default function GeneralJournalAddEdit(props) {
   const [isDisableButton, setIsDisableButton] = useState(false);
   const classes = useStyles();
   const [factories, setFactories] = useState();
-  const [transactionTypes, setTransactionTypes] = useState();
   const [groups, setGroups] = useState();
   const [voucherTypes, setVoucherTypes] = useState([]);
   const [transactionModes, setTransactionModes] = useState([]);
@@ -70,7 +69,6 @@ export default function GeneralJournalAddEdit(props) {
   const [selectedDate, handleDateChange] = useState(new Date());
   const [selectedDueDate, handleDueDateChange] = useState(new Date().toISOString());
   const [financialYearStartDate, setFinancialYearStartDate] = useState();
-  const [financialYearEndDate, setFinancialYearEndDate] = useState();
   const [dateDisable, setDateDisable] = useState(false);
   const [journalData, setJournalData] = useState([]);
   const [accountTypeNames, setAccountTypeNames] = useState();
@@ -82,6 +80,8 @@ export default function GeneralJournalAddEdit(props) {
   const [interEstateButtonEnable, setInterEstateButtonEnable] = useState(false);
   const [isInterStatus, setIsInterStatus] = useState(false);
   const [voucherCodeRef, setVoucherCodeRef] = useState();
+  const [accountDescriptions, setAccountDescriptions] = useState({});
+  const [accountDescriptionsType, setAccountDescriptionsType] = useState({});
   const [refNoInter, setRefNoInter] = useState("");
   const [permissionList, setPermissions] = useState({
     isGroupFilterEnabled: false,
@@ -94,6 +94,7 @@ export default function GeneralJournalAddEdit(props) {
     transactionTypeID: '0',
     referenceNumber: '',
     description: '',
+    descriptionTypeID: 0,
     payModeID: '0',
     chequeNumber: '',
     isActive: true,
@@ -136,7 +137,6 @@ export default function GeneralJournalAddEdit(props) {
   useEffect(() => {
     if (generalJournal.factoryID.toString() !== "0") {
       trackPromise(getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID));
-      trackPromise(getTransactionTypes());
       trackPromise(getVoucherTypeList());
       trackPromise(getTransactionModeList());
       trackPromise(getFinancialYearStartEndDate());
@@ -221,9 +221,9 @@ export default function GeneralJournalAddEdit(props) {
     }
   }
 
-  async function getTransactionTypes() {
-    const transaction = await services.getTransactionTypeNamesForDropdown();
-    setTransactionTypes(transaction);
+  async function getAccountDescriptionsNormal(accID) {
+    const accountDescriptions = await services.getAccountDescriptionsNormal(accID);
+    setAccountDescriptionsType(accountDescriptions);
   }
 
   async function getAccountTypeNames(groupID, factoryID) {
@@ -236,14 +236,12 @@ export default function GeneralJournalAddEdit(props) {
     const yearDate = await services.getFinancialYearStartDateByGroupIDFactoryID(generalJournal.groupID, generalJournal.factoryID);
     if (yearDate !== null) {
       setFinancialYearStartDate(yearDate.financialYearStartDate);
-      setFinancialYearEndDate(yearDate.financialYearEndDate);
       setDateDisable(false);
     }
     else {
       alert.error("Please Config the Financial Year");
       setDateDisable(true);
       setFinancialYearStartDate(new Date());
-      setFinancialYearEndDate(new Date());
     }
   }
 
@@ -265,6 +263,7 @@ export default function GeneralJournalAddEdit(props) {
       transactionTypeID: data[0].transactionTypeID,
       referenceNumber: data[0].referenceNumber,
       description: data[0].description,
+      descriptionTypeID: data[0].descriptionTypeID,
       recipientName: data[0].recipientName,
       transactionMode: data[0].transactionModeID,
       voucherType: data[0].voucherTypeID,
@@ -278,18 +277,19 @@ export default function GeneralJournalAddEdit(props) {
     setRefNo(data[0].referenceNumber);
     handleDateChange(data[0].date);
     setIsInterStatus(data[0].isInterEstate)
+
     let copyArray = data;
-
     let accountNameList = await getAccountTypeNames(data[0].groupID, data[0].factoryID);
-
     let tempArray = [...journalData]
 
     copyArray.forEach(element => {
       let reuslt = GetAll(element.accountTypeName, accountNameList);
+      getAccountDescriptionsNormal(element.accountTypeName);
       tempArray.push(
         {
           accountTypeName: element.accountTypeName,
           description: element.description,
+          descriptionTypeID: element.descriptionTypeID,
           credit: element.credit,
           debit: element.debit,
           ledgerTransactionID: element.ledgerTransactionID,
@@ -340,20 +340,19 @@ export default function GeneralJournalAddEdit(props) {
         journalData.splice(index, 1);
         return;
       }
-
       journalData.forEach(
         function (part, index) {
           journalData[index].accountTypeName = parseInt(part.accountTypeName);
           journalData[index].credit = parseFloat(part.credit);
           journalData[index].debit = parseFloat(part.debit);
           journalData[index].description = part.description;
+          journalData[index].descriptionTypeID = part.descriptionTypeID;
         });
       setJournalData(journalData)
 
       var finalArray = journalData.filter(e => e.accountTypeName !== 0);
 
       if (!isUpdate) {
-
         let saveModel = {
           groupID: generalJournal.groupID,
           factoryID: generalJournal.factoryID,
@@ -370,7 +369,7 @@ export default function GeneralJournalAddEdit(props) {
           date: selectedDate,
           dueDate: selectedDueDate,
           status: approveButtonEnabled == true ? parseInt(2) : parseInt(1),
-          interEstateID: generalJournal.interEstateID,
+          interEstateID: 0,
           isInterEstate: generalJournal.isInterEstate,
         }
 
@@ -381,7 +380,6 @@ export default function GeneralJournalAddEdit(props) {
 
             if (response.statusCode == "Success") {
               alert.success('journal saved successfully');
-
               clearData();
             }
             else {
@@ -404,9 +402,6 @@ export default function GeneralJournalAddEdit(props) {
         else {
           alert.error('credit and debit records shoud be balanced');
         }
-
-
-
       }
       else {
         let updateModel = {
@@ -444,10 +439,7 @@ export default function GeneralJournalAddEdit(props) {
     else {
       alert.error("please enter Debit/Credit Values");
     }
-
   }
-
-
 
   function concatenate(voucherType, transactionMode) {
     const voucherCode = voucherTypes.find(x => x.voucherTypeID === voucherType)
@@ -470,7 +462,6 @@ export default function GeneralJournalAddEdit(props) {
           items.push(<MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>{x.voucherTypeName}</MenuItem>)
         }
       });
-
     }
     return items
   }
@@ -485,7 +476,6 @@ export default function GeneralJournalAddEdit(props) {
       });
     }
     return items
-
   }
 
   function generateDropDownMenu(data) {
@@ -537,6 +527,7 @@ export default function GeneralJournalAddEdit(props) {
       x.debit = parseFloat(x.debit);
       x.ledgerTransactionID = parseFloat(x.ledgerTransactionID);
       x.description = x.description;
+      x.descriptionTypeID = x.descriptionTypeID;
     });
     setDebitTotal(sum.toFixed(2));
     return sum.toFixed(2);
@@ -585,6 +576,7 @@ export default function GeneralJournalAddEdit(props) {
       transactionTypeID: '0',
       referenceNumber: '',
       description: '',
+      descriptionTypeID: '',
       payModeID: '0',
       chequeNumber: '',
       isActive: true,
@@ -599,6 +591,7 @@ export default function GeneralJournalAddEdit(props) {
       credit: 0,
       debit: 0,
       description: "",
+      descriptionTypeID: '',
       ledgerTransactionID: 0,
       rowID: GenerateRandomID()
     }]);
@@ -608,13 +601,22 @@ export default function GeneralJournalAddEdit(props) {
     setVoucherCode('');
   }
 
-  function handleSearchDropdownChange(e, data, rowID) {
+  async function handleSearchDropdownChange(e, data, rowID) {
     if (data === undefined || data === null)
       return;
 
     let valueV = data["ledgerAccountID"];
     const newArr = [...journalData];
     var idx = newArr.findIndex(e => e.rowID == parseInt(rowID));
+
+    const descriptions = await services.getAccountDescriptions(valueV);
+    const newDesc = { ...accountDescriptions };
+    delete newDesc[rowID];
+
+    if (descriptions.length > 0) {
+      newDesc[rowID] = descriptions;
+    }
+    setAccountDescriptions(newDesc);
 
     let reuslt = GetAll(valueV, accountTypeNames);
     const existingRecords = newArr.filter(record => record.AccountTypeName == valueV);
@@ -627,7 +629,8 @@ export default function GeneralJournalAddEdit(props) {
         disableDebitField: existingRecords.length > 0 ? existingRecords[0].disableDebitField : false,
         debit: 0,
         credit: 0,
-        description: ""
+        description: "",
+        descriptionTypeID: 0
       };
     } else {
       newArr[idx] = {
@@ -639,10 +642,10 @@ export default function GeneralJournalAddEdit(props) {
     setJournalData(newArr)
   }
 
-  function changeText(e, rowID, inputType) {
+  function changeText(e, rowID, inputType, IDvalue = 0, desc = null) {
 
-    const target = e.target;
-    const value = target.value
+    let target = e?.target ? e.target : '';
+    let value = target !== '' ? target.value : '';
 
     const newArr = [...journalData];
     var idx = newArr.findIndex(e => e.rowID == parseInt(rowID));
@@ -659,7 +662,9 @@ export default function GeneralJournalAddEdit(props) {
         }
       }
     }
-    if (inputType === "description") {
+    if (inputType.includes('descriptionType')) {
+      newArr[idx] = { ...newArr[idx], descriptionType: desc, descriptionTypeID: IDvalue };
+    } else if (inputType === "description") {
       newArr[idx] = { ...newArr[idx], description: value };
     } else if (inputType === "credit") {
 
@@ -708,7 +713,6 @@ export default function GeneralJournalAddEdit(props) {
   function GenerateRandomID() {
     const d = new Date();
     let ms = d.valueOf();
-
     let rendomValue = ((ms + Math.floor(Math.random() * 10000)) - 12) + ((ms - 128) + (ms * 512))
     return rendomValue;
   }
@@ -762,7 +766,6 @@ export default function GeneralJournalAddEdit(props) {
     }
   }
 
-
   function isInterEstatehandleChange(e) {
     const target = e.target
     const value = target.name === 'isInterEstate' ? target.checked : target.value
@@ -784,6 +787,7 @@ export default function GeneralJournalAddEdit(props) {
               referenceNumber: referenceNumber,
               recipientName: generalJournal.recipientName,
               description: generalJournal.description,
+              descriptionTypeID: generalJournal.descriptionTypeID,
               voucherType: generalJournal.voucherType,
               transactionMode: generalJournal.transactionMode,
               chequeNumber: generalJournal.chequeNumber,
@@ -883,7 +887,6 @@ export default function GeneralJournalAddEdit(props) {
                             <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>
                               Date *
                             </InputLabel>
-
                             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                               <KeyboardDatePicker
                                 fullWidth
@@ -958,10 +961,9 @@ export default function GeneralJournalAddEdit(props) {
                             >
                               <MenuItem value="0">--Select Transaction Mode--</MenuItem>
                               {generateDropownForTransactionModeList(transactionModes)}
-
                             </TextField>
-
                           </Grid>
+
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="referenceNumber">
                               Voucher Code *
@@ -982,7 +984,7 @@ export default function GeneralJournalAddEdit(props) {
                               disabled={isInterStatus}
                             />
                           </Grid>
-                          <Grid item md={4} xs={12}>
+                          {/* <Grid item md={4} xs={12}>
                             <FormControlLabel
                               style={{ marginTop: '25px' }}
                               control={
@@ -1019,11 +1021,11 @@ export default function GeneralJournalAddEdit(props) {
                               <MenuItem value="0">--Select Inter Estate--</MenuItem>
                               {generateDropDownMenuForInterEstate(factories, generalJournal.factoryID)}
                             </TextField>
-                          </Grid>
+                          </Grid> */}
                         </Grid>
+
                         {Hidden == true ?
                           <Grid container spacing={3}>
-
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="chequeNumber">
                                 Due Date
@@ -1046,7 +1048,6 @@ export default function GeneralJournalAddEdit(props) {
                                   autoOk
                                 />
                               </MuiPickersUtilsProvider>
-
                             </Grid>
 
                             <Grid item md={4} xs={12}>
@@ -1092,6 +1093,7 @@ export default function GeneralJournalAddEdit(props) {
                               <TableRow>
                                 <TableCell>Account Name *</TableCell>
                                 <TableCell>Description</TableCell>
+                                <TableCell>Description Category</TableCell>
                                 <TableCell>Debit *</TableCell>
                                 <TableCell>Credit *</TableCell>
                               </TableRow>
@@ -1102,16 +1104,16 @@ export default function GeneralJournalAddEdit(props) {
                                   let ID = object.rowID
                                   return (
                                     <TableRow>
-                                      <TableCell style={{ padding: "16px", width: "20rem" }}>
+                                      <TableCell style={{ padding: "16px", width: "15rem" }}>
                                         <Autocomplete
                                           id={ID.toString()}
                                           options={accountTypeNames}
                                           size={"small"}
-                                          style={{ width: "20rem" }}
+                                          style={{ width: "15rem" }}
                                           getOptionLabel={(option) => option.ledgerAccountName}
                                           onChange={(e, value) => handleSearchDropdownChange("accountName", value, ID)}
                                           value={object.selected !== undefined ? object.selected[0] : null}
-                                          disabled={isInterStatus}
+                                          disabled={isUpdate || isInterStatus}
                                           renderInput={(params) => (
                                             <TextField {...params} fullWidth autoFocus variant="outlined" placeholder="--Select Account--" />
                                           )}
@@ -1121,12 +1123,58 @@ export default function GeneralJournalAddEdit(props) {
                                         <TextField
                                           variant="outlined"
                                           size={"small"}
+                                          style={{ width: "15rem" }}
+                                          placeholder="--Enter Description --"
                                           name={ID}
                                           onBlur={handleBlur}
                                           onChange={(e) => changeText(e, ID, "description")}
                                           disabled={isInterStatus}
                                           value={object.description}
                                           fullWidth />
+                                      </TableCell>
+
+                                      <TableCell style={{ padding: "16px", width: "15rem" }}>
+                                        {isUpdate ?
+                                          <TextField select
+                                            fullWidth
+                                            name="descriptionType"
+                                            size='small'
+                                            onBlur={handleBlur}
+                                            onChange={(e) => handleChangeForm(e)}
+                                            value={object.descriptionTypeID}
+                                            variant="outlined"
+                                            id="descriptionType"
+                                          >
+                                            <MenuItem value="0">--Select Description Type--</MenuItem>
+                                            {generateDropDownMenu(accountDescriptionsType)}
+                                          </TextField>
+                                          :
+                                          <Autocomplete
+                                            id={ID.toString()}
+                                            key={object.descriptionTypeID}
+                                            options={accountDescriptions?.[ID] ?? []}
+                                            size="small"
+                                            disabled={!(accountDescriptions?.[ID] && accountDescriptions[ID].length > 0)}
+                                            freeSolo={!accountDescriptions?.[ID]}
+                                            getOptionLabel={option =>
+                                              typeof option === 'string' ? option : option.accountDescription
+                                            }
+                                            onChange={(e, value) => {
+                                              if (value && value.accountDescriptionTypeID !== undefined) {
+                                                changeText(e, ID, 'descriptionType', value.accountDescriptionTypeID, value.accountDescription);
+                                              }
+                                            }}
+                                            clearOnBlur
+                                            disableClearable={!accountDescriptions?.[ID]}
+                                            value={
+                                              accountDescriptions?.[ID]?.find(
+                                                (desc) => desc.accountDescriptionTypeID === object.descriptionTypeID) || null
+                                            }
+                                            renderInput={params => (
+                                              <TextField {...params} fullWidth autoFocus variant="outlined" placeholder="--Select Description Type--" />
+                                            )}
+                                          />
+                                        }
                                       </TableCell>
                                       <TableCell>
                                         <TextField
@@ -1236,7 +1284,7 @@ export default function GeneralJournalAddEdit(props) {
                           >
                             Record and New
                           </Button> : null}
-                        {permissionList.isApproveButtonEnabled == false && !isUpdate ?
+                        {/* {permissionList.isApproveButtonEnabled == false && !isUpdate ?
                           <Button
                             color="primary"
                             id="btnRecord"
@@ -1247,7 +1295,7 @@ export default function GeneralJournalAddEdit(props) {
                             onClick={RecordClick}
                           >
                             Record
-                          </Button> : null}
+                          </Button> : null} */}
                         {permissionList.isApproveButtonEnabled == true && !isUpdate ?
                           <Button
                             color="primary"

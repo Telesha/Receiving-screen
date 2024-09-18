@@ -73,6 +73,7 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
     registrationNumber: '',
     isEPFEnable: '0',
     epfNumber: '',
+    espsRate: '',
     nICNumber: '',
     secondName: '',
     city: '',
@@ -227,6 +228,7 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
         registrationNumber: empGeneralArray.registrationNumber,
         isEPFEnable: empGeneralArray.isEPFEnable,
         epfNumber: empGeneralArray.epfNumber,
+        espsRate: empGeneralArray.espsRate,
         nICNumber: empGeneralArray.nICNumber,
         secondName: empGeneralArray.secondName,
         city: empGeneralArray.city,
@@ -280,6 +282,7 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
       registrationNumber: values.registrationNumber,
       isEPFEnable: values.isEPFEnable,
       epfNumber: values.epfNumber,
+      espsRate: (values.espsRate) == "" ? 0 : values.espsRate,
       nICNumber: values.nICNumber,
       secondName: values.secondName,
       city: values.city,
@@ -389,6 +392,7 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
             registrationNumber: employee.registrationNumber,
             isEPFEnable: employee.isEPFEnable,
             epfNumber: employee.epfNumber,
+            espsRate: employee.espsRate,
             nICNumber: employee.nICNumber,
             secondName: employee.secondName,
             city: employee.city,
@@ -421,8 +425,12 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
               registrationNumber: Yup.string().matches(/^[0-9\b]+$/, 'Only allow numbers').required('Registration number is required'),
               isEPFEnable: Yup.number().required('EPF mode is required').min("1", 'Select an EPF mode'),
               epfNumber: Yup.string().when('isEPFEnable', {
-                is: (isEPFEnable) => [1, 2].includes(isEPFEnable), 
+                is: (isEPFEnable) => [1, 2].includes(isEPFEnable),
                 then: Yup.string().required('EPF Number is required')
+              }),
+              espsRate: Yup.string().when('isEPFEnable', {
+                is: (isEPFEnable) => [2].includes(isEPFEnable),
+                then: Yup.string().required('Esps Rate is required')
               }),
               nICNumber: Yup.string().required('NIC number is required').matches(/^(?:\d{9}[VvXx]|\d{12})$/, 'Entered NIC not valid'),
               areaType: Yup.number().required('Area type required').min("0", 'Select area type'),
@@ -439,7 +447,6 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
                 is: (areaType) => areaType > 0,
                 then: Yup.string().required('Area required').matches(/^\s*(?=.*[1-9])\d*(?:\.\d{1,2})?\s*$/, 'Enter valid area.').nullable()
               }),
-              
             })
           }
           onSubmit={(values) => saveEmployeeGeneral(values)}
@@ -668,7 +675,7 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
                             <MenuItem value="3">Non-EPF/ESPS</MenuItem>
                           </TextField>
                         </Grid>
-                        {employee.isEPFEnable == 1 || employee.isEPFEnable ==2 ?
+                        {employee.isEPFEnable == 1 || employee.isEPFEnable == 2 ?
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="epfNumber">
                               EPF/ESPS Number *
@@ -682,6 +689,25 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
                               onBlur={handleBlur}
                               onChange={(e) => handleChangeForm(e)}
                               value={employee.epfNumber}
+                              variant="outlined"
+                            />
+                          </Grid>
+                          : null}
+
+                        {employee.isEPFEnable == 2 ?
+                          <Grid item md={4} xs={12}>
+                            <InputLabel shrink id="espsRate">
+                              ESPS Rate (%) *
+                            </InputLabel>
+                            <TextField
+                              error={Boolean(touched.espsRate && errors.espsRate)}
+                              fullWidth
+                              helperText={touched.espsRate && errors.espsRate}
+                              size='small'
+                              name="espsRate"
+                              onBlur={handleBlur}
+                              onChange={(e) => handleChangeForm(e)}
+                              value={employee.espsRate}
                               variant="outlined"
                             />
                           </Grid>
@@ -840,8 +866,6 @@ export function EmployeeGeneral({ empGeneralArray, setEmpGeneralArray, setFactor
                               KeyboardButtonProps={{
                                 'aria-label': 'change date',
                               }}
-
-
                             />
                           </MuiPickersUtilsProvider>
                         </Grid>

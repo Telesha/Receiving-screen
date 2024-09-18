@@ -305,7 +305,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="normalOT">
-                                                                        Normal OT Rate
+                                                                        Normal OT <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -325,7 +325,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="nightOT">
-                                                                        Night OT Rate
+                                                                        Night OT <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -345,7 +345,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="sundayOT">
-                                                                        Sunday OT Rate
+                                                                        Sunday OT <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -372,7 +372,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="cashKilo">
-                                                                        Plucking Cash Kilo <br />Rate
+                                                                        Plucking Cash Kilo <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -392,7 +392,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="machinePluckingCashKilo">
-                                                                        Machine Plucking Cash Kilo Rate
+                                                                        Machine Plucking Cash Kilo <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -441,7 +441,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="overKilo">
-                                                                        Plucking Over Kilo <br />Rate
+                                                                        Plucking Over Kilo <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -461,7 +461,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="machinePluckingOverKilo">
-                                                                        Machine Plucking Over Kilo Rate
+                                                                        Machine Plucking Over Kilo <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         fullWidth
@@ -481,7 +481,7 @@ export default function CheckrollConfiguration() {
                                                                 </Grid>
                                                                 <Grid item md={3} xs={12}>
                                                                     <InputLabel shrink id="cashDayPluckingOverKiloRate">
-                                                                        Cash Day Plucking Over Kilo Rate
+                                                                        Cash Day Plucking Over Kilo <br /> Rate
                                                                     </InputLabel>
                                                                     <TextField
                                                                         error={Boolean(touched.cashDayPluckingOverKiloRate && errors.cashDayPluckingOverKiloRate)}

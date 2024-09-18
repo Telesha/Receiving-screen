@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { Box, Card, makeStyles, Container, CardHeader, CardContent, Divider, MenuItem, Grid, InputLabel, TextField, Button, Typography, Chip } from '@material-ui/core';
 import Page from 'src/components/Page';
@@ -33,18 +33,16 @@ var screenCode = "GENERALJOURNAL"
 
 export default function GeneralJournalListing() {
   const classes = useStyles();
-  const [journalData, setJournalData] = useState([]);
   const [groups, setGroups] = useState();
   const [factories, setFactories] = useState();
-  const [transactionTypes, setTransactionTypes] = useState();
-  const [transactionTypeList, setTransactionTypeList] = useState();
-  const [selectedDate, handleDateChange] = useState(null);
+  const [selectedDate, handleDateChange] = useState(new Date());
   const [gridArray, setGridArray] = useState([]);
   const [voucherTypes, setVoucherTypes] = useState();
   const [pendingCount, setPendingCount] = useState(0);
   const [generalJournalList, setGeneralJournalList] = useState({
     groupID: '0',
     factoryID: '0',
+    statusID: '0',
     transactionTypeID: '0',
     referenceNumber: ''
   })
@@ -83,7 +81,8 @@ export default function GeneralJournalListing() {
 
   const [permissionList, setPermissions] = useState({
     isGroupFilterEnabled: false,
-    isFactoryFilterEnabled: false
+    isFactoryFilterEnabled: false,
+    isJournalApproveEnable: false
   });
 
   useEffect(() => {
@@ -101,11 +100,6 @@ export default function GeneralJournalListing() {
   }, [generalJournalList.groupID]);
 
   useEffect(() => {
-    getTransactionTypes();
-    getTransactionTypeList();
-  }, [generalJournalList.factoryID]);
-
-  useEffect(() => {
     checkPendingCount();
   }, [gridArray]);
 
@@ -119,11 +113,13 @@ export default function GeneralJournalListing() {
 
     var isGroupFilterEnabled = permissions.find(p => p.permissionCode == 'GROUPDROPDOWN');
     var isFactoryFilterEnabled = permissions.find(p => p.permissionCode == 'FACTORYDROPDOWN');
+    var isJournalApproveEnable = permissions.find(p => p.permissionCode == 'JOURNALAPPROVEBUTTONENABLED');
 
     setPermissions({
       ...permissionList,
       isGroupFilterEnabled: isGroupFilterEnabled !== undefined,
       isFactoryFilterEnabled: isFactoryFilterEnabled !== undefined,
+      isJournalApproveEnable: isJournalApproveEnable !== undefined,
     });
 
     setGeneralJournalList({
@@ -136,16 +132,6 @@ export default function GeneralJournalListing() {
   async function checkPendingCount() {
     let count = gridArray.filter(x => x.status == 1);
     setPendingCount(count.length);
-  }
-
-  async function getTransactionTypes() {
-    const transaction = await services.getTransactionTypeNamesForDropdown();
-    setTransactionTypes(transaction);
-  }
-
-  async function getTransactionTypeList() {
-    const transaction = await services.getTransactionTypeList();
-    setTransactionTypeList(transaction);
   }
 
   async function getFactoriesByGroupID() {
@@ -208,19 +194,18 @@ export default function GeneralJournalListing() {
       ...generalJournalList,
       groupID: generalJournalList.groupID,
       factoryID: generalJournalList.factoryID,
+      statusID: '0',
       transactionTypeID: '0',
       referenceNumber: '',
 
     });
     handleDateChange(null)
     setGridArray([]);
-
   }
 
   async function handleSearch() {
 
-    const jList = await services.getGeneralJournalDetails(generalJournalList.groupID, generalJournalList.factoryID, generalJournalList.transactionTypeID, generalJournalList.referenceNumber, selectedDate);
-    setJournalData(jList);
+    const jList = await services.getGeneralJournalDetails(generalJournalList.groupID, generalJournalList.factoryID, generalJournalList.transactionTypeID, generalJournalList.referenceNumber, selectedDate, generalJournalList.statusID);
 
     const groupByReferenceNumber = groupBy(jList, "referenceNumber");
     let keys = Object.keys(groupByReferenceNumber);
@@ -234,7 +219,6 @@ export default function GeneralJournalListing() {
   }
 
   function statusCheck(data) {
-
     if (data == 1) { return "Pending" }
     else if (data == 2) { return "Approved" }
     else { return "Rejected" }
@@ -246,7 +230,6 @@ export default function GeneralJournalListing() {
       title="General Journal"
     >
       <Container maxWidth={false}>
-
         <Formik
           initialValues={{
             groupID: generalJournalList.groupID,
@@ -266,7 +249,6 @@ export default function GeneralJournalListing() {
             handleBlur,
             handleSubmit,
             touched,
-            values
           }) => (
             <form onSubmit={handleSubmit}>
               <Box mt={0}>
@@ -330,7 +312,6 @@ export default function GeneralJournalListing() {
                             value={generalJournalList.transactionTypeID}
                             variant="outlined"
                             id="transactionTypeID"
-
                           >
                             <MenuItem value="0">--Select Transaction Type--</MenuItem>
                             {generateDropDownMenu(transactionTypes)}
@@ -338,10 +319,8 @@ export default function GeneralJournalListing() {
                         </Grid> */}
 
                         <Grid item md={3} xs={12} >
-
                           <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>Date</InputLabel>
                           <MuiPickersUtilsProvider utils={DateFnsUtils}>
-
                             <KeyboardDatePicker
                               fullWidth
                               inputVariant="outlined"
@@ -358,6 +337,29 @@ export default function GeneralJournalListing() {
                               autoOk
                             />
                           </MuiPickersUtilsProvider>
+                        </Grid>
+
+                        <Grid item md={3} xs={12}>
+                          <InputLabel shrink id="statusID">
+                            Status
+                          </InputLabel>
+                          <TextField select
+                            error={Boolean(touched.statusID && errors.statusID)}
+                            fullWidth
+                            helperText={touched.statusID && errors.statusID}
+                            name="statusID"
+                            onBlur={handleBlur}
+                            size='small'
+                            onChange={(e) => handleChange(e)}
+                            value={generalJournalList.statusID}
+                            variant="outlined"
+                            id="statusID"
+                          >
+                            <MenuItem value="0">--Select Status--</MenuItem>
+                            <MenuItem value="1">Pending</MenuItem>
+                            <MenuItem value="2">Approved</MenuItem>
+                            <MenuItem value="3">Rejected</MenuItem>
+                          </TextField>
                         </Grid>
 
                         <Grid item md={3} xs={12}>
@@ -459,7 +461,7 @@ export default function GeneralJournalListing() {
                             }),
                             rowData => (
                               {
-                                hidden: (rowData.status !== 1),
+                                hidden: (rowData.status !== 1 || !permissionList.isJournalApproveEnable),
                                 icon: CheckIcon,
                                 tooltip: 'Approve',
                                 onClick: (event, rowData) => handleClickApprove(rowData.referenceNumber),

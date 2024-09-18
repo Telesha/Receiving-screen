@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
-  Box, Card, Grid, TextField, makeStyles, Container, Button, CardContent, Divider, InputLabel, Switch, CardHeader, MenuItem, TableBody,
+  Box,
+  Card,
+  Grid,
+  TextField,
+  makeStyles,
+  Container,
+  Button,
+  CardContent,
+  Divider,
+  InputLabel,
+  Switch,
+  CardHeader,
+  MenuItem,
+  TableBody,
   TableCell,
   TableHead,
   TableRow,
@@ -13,7 +26,7 @@ import Page from 'src/components/Page';
 import services from '../Services';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, validateYupSchema } from 'formik';
-import * as Yup from "yup";
+import * as Yup from 'yup';
 import PageHeader from 'src/views/Common/PageHeader';
 import { LoadingComponent } from '../../../utils/newLoader';
 import { trackPromise } from 'react-promise-tracker';
@@ -21,12 +34,12 @@ import authService from '../../../utils/permissionAuth';
 import tokenService from '../../../utils/tokenDecoder';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import { KeyboardDatePicker } from "@material-ui/pickers";
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import PaymentVoucherPDF from './PaymentVoucherPDF';
 import ReactToPrint from 'react-to-print';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.dark,
     minHeight: '100%',
@@ -35,24 +48,31 @@ const useStyles = makeStyles((theme) => ({
   },
   avatar: {
     marginRight: theme.spacing(2)
-  },
+  }
 }));
 
-var screenCode = "LANKEMPAYMENT"
+var screenCode = 'LANKEMPAYMENT';
 export default function LankemPaymentView(props) {
-
-  const { accountID, startDate, endDate, referenceNumber, IsGuestNavigation } = useParams();
+  const {
+    accountID,
+    startDate,
+    endDate,
+    referenceNumber,
+    IsGuestNavigation
+  } = useParams();
   const componentRef = useRef();
   const { groupID } = useParams();
   const { factoryID } = useParams();
   const navigate = useNavigate();
-  const [title, setTitle] = useState("Payment")
+  const [title, setTitle] = useState('Payment');
   const classes = useStyles();
   const [factories, setFactories] = useState();
   const [transactionTypes, setTransactionTypes] = useState();
   const [groups, setGroups] = useState([]);
   const [selectedDate, handleDateChange] = useState(new Date().toISOString());
-  const [selectedDueDate, handleDueDateChange] = useState(new Date().toISOString());
+  const [selectedDueDate, handleDueDateChange] = useState(
+    new Date().toISOString()
+  );
   const [journalData, setJournalData] = useState([]);
   const [accountTypeNames, setAccountTypeNames] = useState();
   const [creditTotal, setCreditTotal] = useState(0);
@@ -65,7 +85,7 @@ export default function LankemPaymentView(props) {
   const [suppliers, setSuppliers] = useState();
   const [supplierCommon, setSupplierCommon] = useState(false);
   const [suppliersPaymentID, setSuppliersPaymentID] = useState({
-    paymentTypeID: '0',
+    paymentTypeID: '0'
   });
   const [permissionList, setPermissions] = useState({
     isGroupFilterEnabled: false,
@@ -95,17 +115,17 @@ export default function LankemPaymentView(props) {
     supplierID: '0',
     payee: '',
     modeoftransactionID: '0',
-    modeoftransactionNumber: '',
+    modeoftransactionNumber: ''
   });
 
   const [QuaryParamDetails, setQuaryParamDetails] = useState({
-    groupID: "",
-    factoryID: "",
-    accountID: "",
-    startDate: "",
-    endDate: "",
-    referenceNumber: "",
-    IsGuestNavigation: "0"
+    groupID: '',
+    factoryID: '',
+    accountID: '',
+    startDate: '',
+    endDate: '',
+    referenceNumber: '',
+    IsGuestNavigation: '0'
   });
 
   const [totalValues, setTotalValues] = useState({
@@ -116,20 +136,33 @@ export default function LankemPaymentView(props) {
 
   const handleClickBack = () => {
     if (QuaryParamDetails.IsGuestNavigation === '1') {
-      const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString())
-      const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString())
-      const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString())
-      const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString())
-      const encryptedAccountID = btoa(QuaryParamDetails.accountID.toString())
+      const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString());
+      const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString());
+      const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString());
+      const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString());
+      const encryptedAccountID = btoa(QuaryParamDetails.accountID.toString());
 
-      navigate('/app/inquiryRegistry/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedAccountID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1"));
+      navigate(
+        '/app/ledgerAccountReviewing/' +
+          encryptedGroupID +
+          '/' +
+          encryptedFactoryID +
+          '/' +
+          encryptedAccountID +
+          '/' +
+          encryptedStartDate +
+          '/' +
+          encryptedEndDate +
+          '/' +
+          btoa('1')
+      );
     } else {
       navigate('/app/LankemPayment/listing');
     }
-  }
+  };
   const [printDate, setPrintDate] = useState('');
   const [supplierID, setSupplierID] = useState(0);
-  const [supplierNamePDF, setSupplierNamePDF] = useState("Unknown Customer");
+  const [supplierNamePDF, setSupplierNamePDF] = useState('Unknown Customer');
   useEffect(() => {
     const currentDate = new Date();
     const formattedDate = currentDate.toLocaleString();
@@ -146,7 +179,9 @@ export default function LankemPaymentView(props) {
   }, [generalJournal.groupID]);
 
   useEffect(() => {
-    trackPromise(getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID));
+    trackPromise(
+      getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID)
+    );
     trackPromise(getTransactionTypes());
     trackPromise(getVoucherTypeList());
     trackPromise(getTransactionModeList());
@@ -155,12 +190,12 @@ export default function LankemPaymentView(props) {
 
   useEffect(() => {
     decrypted = atob(referenceNumber.toString());
-    const decrypedGroupID = atob(groupID.toString())
-    const decrypedFactoryID = atob(factoryID.toString())
-    const decrypedAccountID = atob(accountID.toString())
-    const decrypedStartDate = atob(startDate.toString())
-    const decrypedEndDate = atob(endDate.toString())
-    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString())
+    const decrypedGroupID = atob(groupID.toString());
+    const decrypedFactoryID = atob(factoryID.toString());
+    const decrypedAccountID = atob(accountID.toString());
+    const decrypedStartDate = atob(startDate.toString());
+    const decrypedEndDate = atob(endDate.toString());
+    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString());
     setQuaryParamDetails({
       groupID: decrypedGroupID,
       factoryID: decrypedFactoryID,
@@ -169,10 +204,12 @@ export default function LankemPaymentView(props) {
       endDate: decrypedEndDate,
       referenceNumber: decrypted,
       IsGuestNavigation: decrypedIsGuestNavigation
-    })
+    });
 
     if (decrypted != 0) {
-      trackPromise(getGeneralJournalDetails(decrypted, decrypedGroupID, decrypedFactoryID))
+      trackPromise(
+        getGeneralJournalDetails(decrypted, decrypedGroupID, decrypedFactoryID)
+      );
     }
   }, []);
 
@@ -184,9 +221,9 @@ export default function LankemPaymentView(props) {
 
   useEffect(() => {
     if (generalJournal.isInterEstate == true) {
-      setInterEstateButtonEnable(true)
+      setInterEstateButtonEnable(true);
     } else {
-      setInterEstateButtonEnable(false)
+      setInterEstateButtonEnable(false);
     }
   }, [generalJournal.isInterEstate]);
 
@@ -199,18 +236,22 @@ export default function LankemPaymentView(props) {
 
   useEffect(() => {
     if (journalData.length != 0) {
-      calculateTotal()
+      calculateTotal();
     }
   }, [journalData]);
 
   async function getReferenceNumber() {
-    if (generalJournal.referenceNumber < 1 || generalJournal.referenceNumberk == "" || generalJournal.referenceNumber == undefined) {
+    if (
+      generalJournal.referenceNumber < 1 ||
+      generalJournal.referenceNumberk == '' ||
+      generalJournal.referenceNumber == undefined
+    ) {
       let refModel = {
         groupID: generalJournal.groupID,
         factoryID: generalJournal.factoryID,
         transactionTypeID: generalJournal.transactionTypeID,
-        isActive: true,
-      }
+        isActive: true
+      };
       const ref = await services.getReferenceNumber(refModel);
       setGeneralJournal({ ...generalJournal, referenceNumber: ref });
     }
@@ -222,44 +263,53 @@ export default function LankemPaymentView(props) {
   }
 
   async function getAccountTypeNames(groupID, factoryID) {
-    const accounts = await services.getLedgerAccountNamesForDatagrid(groupID, factoryID);
+    const accounts = await services.getLedgerAccountNamesForDatagrid(
+      groupID,
+      factoryID
+    );
     setAccountTypeNames(accounts);
     return accounts;
   }
 
   async function getPermissions() {
     var permissions = await authService.getPermissionsByScreen(screenCode);
-    var isAuthorized = permissions.find(p => p.permissionCode == 'ADDEDITLANKEMPAYMENT');
+    var isAuthorized = permissions.find(
+      p => p.permissionCode == 'ADDEDITLANKEMPAYMENT'
+    );
 
     if (isAuthorized === undefined) {
       navigate('/404');
     }
 
-    var isGroupFilterEnabled = permissions.find(p => p.permissionCode == 'GROUPDROPDOWN');
-    var isFactoryFilterEnabled = permissions.find(p => p.permissionCode == 'FACTORYDROPDOWN');
+    var isGroupFilterEnabled = permissions.find(
+      p => p.permissionCode == 'GROUPDROPDOWN'
+    );
+    var isFactoryFilterEnabled = permissions.find(
+      p => p.permissionCode == 'FACTORYDROPDOWN'
+    );
 
     setPermissions({
       ...permissionList,
       isGroupFilterEnabled: isGroupFilterEnabled !== undefined,
-      isFactoryFilterEnabled: isFactoryFilterEnabled !== undefined,
+      isFactoryFilterEnabled: isFactoryFilterEnabled !== undefined
     });
 
     setGeneralJournal({
       ...generalJournal,
       groupID: parseInt(tokenService.getGroupIDFromToken()),
       factoryID: parseInt(tokenService.getFactoryIDFromToken())
-    })
+    });
   }
 
   async function getfactoriesForDropDown() {
-    const factory = await services.getfactoriesForDropDown(generalJournal.groupID);
+    const factory = await services.getfactoriesForDropDown(
+      generalJournal.groupID
+    );
     setFactories(factory);
   }
 
   async function getSuppliersPaymentID() {
-    const result = await services.getSuppliersPaymentID(
-      generalJournal.groupID
-    );
+    const result = await services.getSuppliersPaymentID(generalJournal.groupID);
     result.forEach(item => {
       setSuppliersPaymentID(suppliersPaymentID => ({
         ...suppliersPaymentID,
@@ -269,25 +319,29 @@ export default function LankemPaymentView(props) {
   }
 
   async function getGeneralJournalDetails(referenceNumber, groupID, factoryID) {
-    let response = await services.getGeneralJournalDetailsByReferenceNumber(referenceNumber, groupID, factoryID);
+    let response = await services.getGeneralJournalDetailsByReferenceNumber(
+      referenceNumber,
+      groupID,
+      factoryID
+    );
     let data = response;
-    setTitle("View Payment");
+    setTitle('View Payment');
     setSupplierID(data[0].supplierID);
     setGeneralJournal({
       ...generalJournal,
       groupID: data[0].groupID,
       factoryID: data[0].factoryID,
       transactionTypeID: data[0].transactionTypeID,
-      description: data[0].description == null ? "" : data[0].description,
+      description: data[0].description == null ? '' : data[0].description,
       payModeID: data[0].payModeID,
-      chequeNumber: data[0].chequeNumber == null ? "" : data[0].chequeNumber,
+      chequeNumber: data[0].chequeNumber == null ? '' : data[0].chequeNumber,
       preparedBy: data[0].preparedBy,
       updatedBy: data[0].updatedBy,
       referenceNumber: data[0].referenceNumber,
       recipientName: data[0].recipientName,
       transactionMode: data[0].transactionModeID,
       voucherType: data[0].voucherTypeID,
-      chequeNumber: data[0].chequeNumber == null ? "" : data[0].chequeNumber,
+      chequeNumber: data[0].chequeNumber == null ? '' : data[0].chequeNumber,
       checkedBy: data[0].checkedBy,
       isInterEstate: data[0].isInterEstate,
       interEstateID: data[0].interEstateID,
@@ -297,42 +351,47 @@ export default function LankemPaymentView(props) {
       estateName: data[0].estateName,
       modeoftransactionNumber: data[0].modeoftransactionNumber,
       modeoftransactionID: data[0].modeoftransactionID,
-      payee: data[0].payee,
-
+      payee: data[0].payee
     });
-    handleDateChange(new Date(data[0].date).toISOString())
+    handleDateChange(new Date(data[0].date).toISOString());
     const supplier = await services.getSuppliersForDropDown(
       parseInt(data[0].factoryID)
     );
-    if ((data[0].supplierID > 0) && (supplier[data[0].supplierID].code == 'COMMON')) {
+    if (
+      data[0].supplierID > 0 &&
+      supplier[data[0].supplierID].code == 'COMMON'
+    ) {
       setSupplierCommon(true);
       setSupplierNamePDF(data[0].payee);
     } else {
       setSupplierCommon(false);
       setSupplierNamePDF(supplier[data[0].supplierID].name);
     }
-    let tranLedgerAccountID = data[0].tranLedgerAccountID
+    let tranLedgerAccountID = data[0].tranLedgerAccountID;
     let copyArray = data;
-    let accountNameList = await getAccountTypeNames(data[0].groupID, data[0].factoryID);
-    let tempArray = [...journalData]
-    var filteredArray = copyArray.filter((x) => x.accountTypeName !== tranLedgerAccountID);
+    let accountNameList = await getAccountTypeNames(
+      data[0].groupID,
+      data[0].factoryID
+    );
+    let tempArray = [...journalData];
+    var filteredArray = copyArray.filter(
+      x => x.accountTypeName !== tranLedgerAccountID
+    );
     filteredArray.forEach(element => {
       let reuslt = GetAll(element.accountTypeName, accountNameList);
-      tempArray.push(
-        {
-          accountTypeName: element.accountTypeName,
-          description: element.description,
-          credit: element.credit,
-          debit: element.debit,
-          ledgerTransactionID: element.ledgerTransactionID,
-          rowID: 0,
-          ledgerAccountCode: element.ledgerAccountCode,
-          ledgerAccountName: element.ledgerAccountName,
-          selected: reuslt
-        }
-      )
+      tempArray.push({
+        accountTypeName: element.accountTypeName,
+        description: element.description,
+        credit: element.credit,
+        debit: element.debit,
+        ledgerTransactionID: element.ledgerTransactionID,
+        rowID: 0,
+        ledgerAccountCode: element.ledgerAccountCode,
+        ledgerAccountName: element.ledgerAccountName,
+        selected: reuslt
+      });
     });
-    setJournalData(tempArray)
+    setJournalData(tempArray);
   }
 
   async function getGroupsForDropdown() {
@@ -340,11 +399,10 @@ export default function LankemPaymentView(props) {
     setGroups(groups);
   }
 
-
   async function getTransactionModeList() {
     const transactionModes = await services.getTransactionModeList();
     setTransactionModes(transactionModes);
-    return transactionModes
+    return transactionModes;
   }
 
   async function getVoucherTypeList() {
@@ -354,7 +412,9 @@ export default function LankemPaymentView(props) {
   }
 
   async function getTranLedgerList() {
-    const transaction = await services.getTranLedgerListForDropdown(generalJournal.factoryID);
+    const transaction = await services.getTranLedgerListForDropdown(
+      generalJournal.factoryID
+    );
     setTranLedgerList(transaction);
   }
 
@@ -366,7 +426,6 @@ export default function LankemPaymentView(props) {
   }
 
   function calculateTotal() {
-
     const totalAmount = journalData.reduce((accumulator, current) => {
       const progressFraction = current.debit;
       return accumulator + progressFraction;
@@ -379,28 +438,36 @@ export default function LankemPaymentView(props) {
   }
 
   function generateDropDownMenu(data) {
-    let items = []
+    let items = [];
     if (data != null) {
       for (const [key, value] of Object.entries(data)) {
-        items.push(<MenuItem key={key} value={key}>{value}</MenuItem>);
+        items.push(
+          <MenuItem key={key} value={key}>
+            {value}
+          </MenuItem>
+        );
       }
     }
-    return items
+    return items;
   }
 
   function generateDropDownMenuWithTwoValues(data) {
-    let items = []
+    let items = [];
     if (data != null) {
       for (const [key, value] of Object.entries(data)) {
-        items.push(<MenuItem key={key} value={key}>{value.name}</MenuItem>);
+        items.push(
+          <MenuItem key={key} value={key}>
+            {value.name}
+          </MenuItem>
+        );
       }
     }
-    return items
+    return items;
   }
 
   function handleChange1(e) {
     const target = e.target;
-    const value = target.value
+    const value = target.value;
     setGeneralJournal({
       ...generalJournal,
       [e.target.name]: value
@@ -414,18 +481,16 @@ export default function LankemPaymentView(props) {
           {titleName}
         </Grid>
         <Grid item md={2} xs={12}>
-          <PageHeader
-            onClick={handleClickBack}
-          />
+          <PageHeader onClick={handleClickBack} />
         </Grid>
       </Grid>
-    )
+    );
   }
 
   function calDebitTotal() {
     let sum = 0;
     journalData.forEach(element => {
-      sum += parseFloat(element.debit)
+      sum += parseFloat(element.debit);
     });
     setDebitTotal(sum.toFixed(2));
     return sum.toFixed(2);
@@ -445,19 +510,23 @@ export default function LankemPaymentView(props) {
   }
 
   function generateDropownForVoucherList(dataList) {
-    let items = []
+    let items = [];
     if (dataList != null) {
       voucherTypes.forEach(x => {
-        items.push(<MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>{x.voucherTypeName}</MenuItem>)
+        items.push(
+          <MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>
+            {x.voucherTypeName}
+          </MenuItem>
+        );
       });
-
     }
-    return items
-
+    return items;
   }
 
   function GetAll(ledgerAccountID, accountTypeNames) {
-    const result = accountTypeNames.filter((a) => a.ledgerAccountID.toString() === ledgerAccountID.toString())
+    const result = accountTypeNames.filter(
+      a => a.ledgerAccountID.toString() === ledgerAccountID.toString()
+    );
     return result;
   }
 
@@ -479,23 +548,14 @@ export default function LankemPaymentView(props) {
               tranLedgerAccountID: generalJournal.tranLedgerAccountID,
               supplierID: generalJournal.supplierID,
               payee: generalJournal.payee
-
             }}
             enableReinitialize
           >
-            {({
-              errors,
-              handleBlur,
-              handleSubmit,
-              touched,
-              values,
-            }) => (
+            {({ errors, handleBlur, handleSubmit, touched, values }) => (
               <form onSubmit={handleSubmit}>
                 <Box mt={0}>
                   <Card>
-                    <CardHeader
-                      title={cardTitle(title)}
-                    />
+                    <CardHeader title={cardTitle(title)} />
                     <PerfectScrollbar>
                       <Divider />
                       <CardContent>
@@ -504,19 +564,20 @@ export default function LankemPaymentView(props) {
                             <InputLabel shrink id="groupID">
                               Group *
                             </InputLabel>
-                            <TextField select
+                            <TextField
+                              select
                               error={Boolean(touched.groupID && errors.groupID)}
                               fullWidth
                               helperText={touched.groupID && errors.groupID}
                               name="groupID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange1(e)}
+                              onChange={e => handleChange1(e)}
                               value={values.groupID}
                               variant="outlined"
                               id="groupID"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Group--</MenuItem>
@@ -527,19 +588,22 @@ export default function LankemPaymentView(props) {
                             <InputLabel shrink id="factoryID">
                               Estate *
                             </InputLabel>
-                            <TextField select
-                              error={Boolean(touched.factoryID && errors.factoryID)}
+                            <TextField
+                              select
+                              error={Boolean(
+                                touched.factoryID && errors.factoryID
+                              )}
                               fullWidth
                               helperText={touched.factoryID && errors.factoryID}
                               name="factoryID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange1(e)}
+                              onChange={e => handleChange1(e)}
                               value={generalJournal.factoryID}
                               variant="outlined"
                               id="factoryID"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Estate--</MenuItem>
@@ -547,7 +611,11 @@ export default function LankemPaymentView(props) {
                             </TextField>
                           </Grid>
                           <Grid item md={4} xs={12}>
-                            <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>
+                            <InputLabel
+                              shrink
+                              id="date"
+                              style={{ marginBottom: '-8px' }}
+                            >
                               Date *
                             </InputLabel>
 
@@ -559,11 +627,11 @@ export default function LankemPaymentView(props) {
                                 margin="dense"
                                 id="date-picker-inline"
                                 value={selectedDate}
-                                onChange={(e) => {
-                                  handleDateChange(e)
+                                onChange={e => {
+                                  handleDateChange(e);
                                 }}
                                 KeyboardButtonProps={{
-                                  'aria-label': 'change date',
+                                  'aria-label': 'change date'
                                 }}
                                 autoOk
                                 disabled="true"
@@ -572,33 +640,40 @@ export default function LankemPaymentView(props) {
                                 }}
                               />
                             </MuiPickersUtilsProvider>
-
                           </Grid>
                         </Grid>
                         <Grid container spacing={3}>
-                          {Hidden == true ?
+                          {Hidden == true ? (
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="voucherType">
                                 Voucher Type *
                               </InputLabel>
-                              <TextField select
-                                error={Boolean(touched.voucherType && errors.voucherType)}
+                              <TextField
+                                select
+                                error={Boolean(
+                                  touched.voucherType && errors.voucherType
+                                )}
                                 fullWidth
-                                helperText={touched.voucherType && errors.voucherType}
+                                helperText={
+                                  touched.voucherType && errors.voucherType
+                                }
                                 name="voucherType"
-                                size='small'
+                                size="small"
                                 onBlur={handleBlur}
                                 value={generalJournal.voucherType}
                                 variant="outlined"
                                 id="voucherType"
                                 InputProps={{
-                                  readOnly: true,
+                                  readOnly: true
                                 }}
                               >
-                                <MenuItem value="0">--Select Voucher Type--</MenuItem>
+                                <MenuItem value="0">
+                                  --Select Voucher Type--
+                                </MenuItem>
                                 {generateDropownForVoucherList(voucherTypes)}
                               </TextField>
-                            </Grid> : null}
+                            </Grid>
+                          ) : null}
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="tranLedgerAccountID">
                               Bank Account *
@@ -607,7 +682,7 @@ export default function LankemPaymentView(props) {
                               select
                               error={Boolean(
                                 touched.tranLedgerAccountID &&
-                                errors.tranLedgerAccountID
+                                  errors.tranLedgerAccountID
                               )}
                               fullWidth
                               helperText={
@@ -627,9 +702,7 @@ export default function LankemPaymentView(props) {
                               <MenuItem value="0">
                                 --Select Ledger Account--
                               </MenuItem>
-                              {generateDropDownMenu(
-                                tranLedgerList
-                              )}
+                              {generateDropDownMenu(tranLedgerList)}
                             </TextField>
                           </Grid>
                           <Grid item md={4} xs={12}>
@@ -637,16 +710,22 @@ export default function LankemPaymentView(props) {
                               Voucher Code *
                             </InputLabel>
                             <TextField
-                              error={Boolean(touched.referenceNumber && errors.referenceNumber)}
+                              error={Boolean(
+                                touched.referenceNumber &&
+                                  errors.referenceNumber
+                              )}
                               fullWidth
-                              helperText={touched.referenceNumber && errors.referenceNumber}
+                              helperText={
+                                touched.referenceNumber &&
+                                errors.referenceNumber
+                              }
                               name="referenceNumber"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
                               value={generalJournal.referenceNumber}
                               variant="outlined"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             />
                           </Grid>
@@ -660,7 +739,9 @@ export default function LankemPaymentView(props) {
                                 touched.supplierID && errors.supplierID
                               )}
                               fullWidth
-                              helperText={touched.supplierID && errors.supplierID}
+                              helperText={
+                                touched.supplierID && errors.supplierID
+                              }
                               name="supplierID"
                               size="small"
                               onBlur={handleBlur}
@@ -668,27 +749,22 @@ export default function LankemPaymentView(props) {
                               variant="outlined"
                               id="supplierID"
                               InputProps={{
-                                readOnly:
-                                  true
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Supplier--</MenuItem>
                               {generateDropDownMenuWithTwoValues(suppliers)}
                             </TextField>
                           </Grid>
-                          {supplierCommon ?
+                          {supplierCommon ? (
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="payee">
                                 Payee *
                               </InputLabel>
                               <TextField
-                                error={Boolean(
-                                  touched.payee && errors.payee
-                                )}
+                                error={Boolean(touched.payee && errors.payee)}
                                 fullWidth
-                                helperText={
-                                  touched.payee && errors.payee
-                                }
+                                helperText={touched.payee && errors.payee}
                                 name="payee"
                                 size="small"
                                 onBlur={handleBlur}
@@ -696,12 +772,11 @@ export default function LankemPaymentView(props) {
                                 variant="outlined"
                                 id="payee"
                                 InputProps={{
-                                  readOnly:
-                                    true
+                                  readOnly: true
                                 }}
                               />
                             </Grid>
-                            : null}
+                          ) : null}
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="modeoftransactionID">
                               Mode of transaction
@@ -712,7 +787,9 @@ export default function LankemPaymentView(props) {
                               size="small"
                               fullWidth
                               onBlur={handleBlur}
-                              onChange={e => { handleChange1(e); }}
+                              onChange={e => {
+                                handleChange1(e);
+                              }}
                               value={generalJournal.modeoftransactionID}
                               variant="outlined"
                               id="modeoftransactionID"
@@ -720,25 +797,36 @@ export default function LankemPaymentView(props) {
                                 readOnly: true
                               }}
                             >
-                              <MenuItem value="0">--Select Transaction Mode--</MenuItem>
+                              <MenuItem value="0">
+                                --Select Transaction Mode--
+                              </MenuItem>
                               <MenuItem value="1"> Cheque </MenuItem>
                               <MenuItem value="2"> Fund Transfer </MenuItem>
                               <MenuItem value="3"> Cash </MenuItem>
                             </TextField>
                           </Grid>
-                          {generalJournal.modeoftransactionID > 0 && generalJournal.modeoftransactionID != 3 ?
+                          {generalJournal.modeoftransactionID > 0 &&
+                          generalJournal.modeoftransactionID != 3 ? (
                             <Grid item md={4} xs={12}>
-                              {generalJournal.modeoftransactionID == 1 ?
+                              {generalJournal.modeoftransactionID == 1 ? (
                                 <InputLabel shrink id="modeoftransactionNumber">
                                   Cheque Number
-                                </InputLabel> :
+                                </InputLabel>
+                              ) : (
                                 <InputLabel shrink id="modeoftransactionNumber">
                                   Fund Transfer Number
-                                </InputLabel>}
+                                </InputLabel>
+                              )}
                               <TextField
-                                error={Boolean(touched.modeoftransactionNumber && errors.modeoftransactionNumber)}
+                                error={Boolean(
+                                  touched.modeoftransactionNumber &&
+                                    errors.modeoftransactionNumber
+                                )}
                                 fullWidth
-                                helperText={touched.modeoftransactionNumber && errors.modeoftransactionNumber}
+                                helperText={
+                                  touched.modeoftransactionNumber &&
+                                  errors.modeoftransactionNumber
+                                }
                                 name="modeoftransactionNumber"
                                 size="small"
                                 onBlur={handleBlur}
@@ -749,11 +837,12 @@ export default function LankemPaymentView(props) {
                                   readOnly: true
                                 }}
                               />
-                            </Grid> : null}
+                            </Grid>
+                          ) : null}
                         </Grid>
                       </CardContent>
                       <CardContent height="auto">
-                        <Box style={{ border: "1px solid gray" }}>
+                        <Box style={{ border: '1px solid gray' }}>
                           <Table>
                             <TableHead>
                               <TableRow>
@@ -763,49 +852,64 @@ export default function LankemPaymentView(props) {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {
-                                journalData.map((object) => {
-                                  let ID = object.rowID
-                                  return (
-                                    <TableRow>
-                                      <TableCell style={{ padding: "16px", width: "20rem" }}>
-                                        <Autocomplete
-                                          id={ID.toString()}
-                                          options={accountTypeNames}
-                                          size={"small"}
-                                          style={{ width: "20rem" }}
-                                          disabled={true}
-                                          getOptionLabel={(option) => option.ledgerAccountName}
-                                          value={object.selected !== undefined ? object.selected[0] : null}
-                                          renderInput={(params) => (
-                                            <TextField {...params} fullWidth autoFocus variant="outlined" placeholder="--Select Account--" />
-                                          )}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <TextField
-                                          variant="outlined"
-                                          size={"small"}
-                                          name={ID}
-                                          value={object.description}
-                                          fullWidth
-                                          disabled={true}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <TextField
-                                          variant="outlined"
-                                          size={"small"}
-                                          name={ID}
-                                          fullWidth
-                                          value={object.debit}
-                                          disabled={true}
-                                        />
-                                      </TableCell>
-                                    </TableRow>
-                                  )
-                                })
-                              }
+                              {journalData.map(object => {
+                                let ID = object.rowID;
+                                return (
+                                  <TableRow>
+                                    <TableCell
+                                      style={{
+                                        padding: '16px',
+                                        width: '20rem'
+                                      }}
+                                    >
+                                      <Autocomplete
+                                        id={ID.toString()}
+                                        options={accountTypeNames}
+                                        size={'small'}
+                                        style={{ width: '20rem' }}
+                                        disabled={true}
+                                        getOptionLabel={option =>
+                                          option.ledgerAccountName
+                                        }
+                                        value={
+                                          object.selected !== undefined
+                                            ? object.selected[0]
+                                            : null
+                                        }
+                                        renderInput={params => (
+                                          <TextField
+                                            {...params}
+                                            fullWidth
+                                            autoFocus
+                                            variant="outlined"
+                                            placeholder="--Select Account--"
+                                          />
+                                        )}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        variant="outlined"
+                                        size={'small'}
+                                        name={ID}
+                                        value={object.description}
+                                        fullWidth
+                                        disabled={true}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        variant="outlined"
+                                        size={'small'}
+                                        name={ID}
+                                        fullWidth
+                                        value={object.debit}
+                                        disabled={true}
+                                      />
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </Box>
@@ -861,35 +965,42 @@ export default function LankemPaymentView(props) {
                       </CardContent>
                       <Box display="flex" justifyContent="flex-end" p={2}>
                         <div>&nbsp;</div>
-                        {<ReactToPrint
-                          documentTitle={generalJournal.referenceNumber + ' - Payment Voucher'}
-                          trigger={() => (
-                            <Button
-                              color="primary"
-                              id="btnRecord"
-                              variant="contained"
-                              style={{ marginRight: '1rem' }}
-                              className={classes.colorCancel}
-                              size="small"
-                            >
-                              PDF
-                            </Button>
-                          )}
-                          content={() => componentRef.current}
-                        />}
-                        {<div hidden={true}>
-                          <PaymentVoucherPDF
-                            ref={componentRef}
-                            generalJournal={generalJournal}
-                            suppliersPaymentID={suppliersPaymentID}
-                            selectedDate={selectedDate}
-                            journalData={journalData}
-                            suppliers={suppliers}
-                            printDate={printDate}
-                            totalValues={totalValues}
-                            supplierNamePDF={supplierNamePDF}
+                        {
+                          <ReactToPrint
+                            documentTitle={
+                              generalJournal.referenceNumber +
+                              ' - Payment Voucher'
+                            }
+                            trigger={() => (
+                              <Button
+                                color="primary"
+                                id="btnRecord"
+                                variant="contained"
+                                style={{ marginRight: '1rem' }}
+                                className={classes.colorCancel}
+                                size="small"
+                              >
+                                PDF
+                              </Button>
+                            )}
+                            content={() => componentRef.current}
                           />
-                        </div>}
+                        }
+                        {
+                          <div hidden={true}>
+                            <PaymentVoucherPDF
+                              ref={componentRef}
+                              generalJournal={generalJournal}
+                              suppliersPaymentID={suppliersPaymentID}
+                              selectedDate={selectedDate}
+                              journalData={journalData}
+                              suppliers={suppliers}
+                              printDate={printDate}
+                              totalValues={totalValues}
+                              supplierNamePDF={supplierNamePDF}
+                            />
+                          </div>
+                        }
                       </Box>
                     </PerfectScrollbar>
                   </Card>
@@ -901,4 +1012,4 @@ export default function LankemPaymentView(props) {
       </Page>
     </Fragment>
   );
-};
+}

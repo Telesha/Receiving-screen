@@ -1,8 +1,19 @@
 import React, { useState, useEffect, Fragment, useRef } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
-  Box, Card, Button, makeStyles, Container, Divider, CardContent, CardHeader, Grid, TextField,
-  MenuItem, InputLabel, Typography
+  Box,
+  Card,
+  Button,
+  makeStyles,
+  Container,
+  Divider,
+  CardContent,
+  CardHeader,
+  Grid,
+  TextField,
+  MenuItem,
+  InputLabel,
+  Typography
 } from '@material-ui/core';
 import Page from 'src/components/Page';
 import services from '../Services';
@@ -11,26 +22,25 @@ import authService from '../../../../utils/permissionAuth';
 import tokenService from '../../../../utils/tokenDecoder';
 import { trackPromise } from 'react-promise-tracker';
 import { LoadingComponent } from '../../../../utils/newLoader';
-import MaterialTable from "material-table";
+import MaterialTable from 'material-table';
 import { red, blue } from '@material-ui/core/colors';
-import { useAlert } from "react-alert";
+import { useAlert } from 'react-alert';
 import { Formik } from 'formik';
-import * as Yup from "yup";
-import ReactToPrint from "react-to-print";
+import * as Yup from 'yup';
+import ReactToPrint from 'react-to-print';
 import CreatePDF from './CreatePDF';
 import xlsx from 'json-as-xlsx';
 import VisibilityIcon from '@material-ui/icons/Visibility';
 import PageHeader from 'src/views/Common/PageHeader';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import { KeyboardDatePicker } from "@material-ui/pickers";
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import moment from 'moment';
 import CountUp from 'react-countup';
 import CurrencyCommaSeperation from 'src/views/Common/CurrencyCommaSeperation';
 
-
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.dark,
     minHeight: '100%',
@@ -38,60 +48,76 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: theme.spacing(3)
   },
   cardroot: {
-    minWidth: 275,
+    minWidth: 275
   },
   avatar: {
     marginRight: theme.spacing(2)
   },
   colorReject: {
-    backgroundColor: "red",
+    backgroundColor: 'red'
   },
   colorApprove: {
-    backgroundColor: "green",
+    backgroundColor: 'green'
   },
   card: {
     flexGrow: 10,
-    backgroundColor: "#ffffff",
+    backgroundColor: '#ffffff',
     paddingInlineStart: '10px',
-    borderRadius: '10px',
+    borderRadius: '10px'
   },
   avatar: {
-    backgroundColor: red[500],
+    backgroundColor: red[500]
   },
   blue: {
-    backgroundColor: blue[500],
+    backgroundColor: blue[500]
   },
   succes: {
-    backgroundColor: "#e8f5e9"
+    backgroundColor: '#e8f5e9'
   },
   failed: {
-    backgroundColor: "#fce4ec"
+    backgroundColor: '#fce4ec'
   },
   colorCancel: {
-    backgroundColor: "red",
+    backgroundColor: 'red'
   },
   colorRecordAndNew: {
-    backgroundColor: "#FFBE00"
+    backgroundColor: '#FFBE00'
   },
   colorRecord: {
-    backgroundColor: "green",
+    backgroundColor: 'green'
   }
 }));
 
 const screenCode = 'INQUIRYREGISTRY';
 
 export default function InquiryRegistry(props) {
-  const { groupID, factoryID, accountID, startDate, endDate, IsGuestNavigation } = useParams();
-  const [title, setTitle] = useState("Inquiry Registry")
+  const {
+    groupID,
+    factoryID,
+    accountID,
+    startDate,
+    endDate,
+    IsGuestNavigation
+  } = useParams();
+  const [title, setTitle] = useState('Ledger Account Reviewing');
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [groups, setGroups] = useState();
   const [factories, setFactories] = useState();
   const [ledgerAccounts, setLedgerAccounts] = useState();
   const [inquiryRegistry, setInquiryRegistry] = useState({
-    groupID: atob(IsGuestNavigation.toString()) === "1" ? parseInt(atob(groupID.toString())) : '0',
-    factoryID: atob(IsGuestNavigation.toString()) === "1" ? parseInt(atob(factoryID.toString())) : '0',
-    ledgerAccountID: atob(IsGuestNavigation.toString()) === "1" ? parseInt(atob(accountID.toString())) : '0',
+    groupID:
+      atob(IsGuestNavigation.toString()) === '1'
+        ? parseInt(atob(groupID.toString()))
+        : '0',
+    factoryID:
+      atob(IsGuestNavigation.toString()) === '1'
+        ? parseInt(atob(factoryID.toString()))
+        : '0',
+    ledgerAccountID:
+      atob(IsGuestNavigation.toString()) === '1'
+        ? parseInt(atob(accountID.toString()))
+        : '0',
     ledgerAccountCode: ''
   });
   const [transactionDetails, setTransactionDetails] = useState([]);
@@ -119,8 +145,11 @@ export default function InquiryRegistry(props) {
   const open = Boolean(anchorEl);
 
   const componentRef = useRef();
-  const [csvHeaders, SetCsvHeaders] = useState([])
-  const [IsBackButtonEnableForTrialBalace, setIsBackButtonEnableForTrialBalace] = useState(false)
+  const [csvHeaders, SetCsvHeaders] = useState([]);
+  const [
+    IsBackButtonEnableForTrialBalace,
+    setIsBackButtonEnableForTrialBalace
+  ] = useState(false);
   const [PdfExcelGeneralDetails, setPdfExcelGeneralDetails] = useState({
     groupName: '',
     factoryName: '',
@@ -128,23 +157,23 @@ export default function InquiryRegistry(props) {
     endDate: ''
   });
   const [QuaryParamDetails, setQuaryParamDetails] = useState({
-    groupID: "",
-    factoryID: "",
-    accountID: "",
-    startDate: "",
-    endDate: "",
-    IsGuestNavigation: "0"
+    groupID: '',
+    factoryID: '',
+    accountID: '',
+    startDate: '',
+    endDate: '',
+    IsGuestNavigation: '0'
   });
 
   useEffect(() => {
     getPermissions();
     trackPromise(getGroupsForDropdown());
-    const decrypedGroupID = atob(groupID.toString())
-    const decrypedFactoryID = atob(factoryID.toString())
-    const decrypedAccountID = atob(accountID.toString())
-    const decrypedStartDate = atob(startDate.toString())
-    const decrypedEndDate = atob(endDate.toString())
-    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString())
+    const decrypedGroupID = atob(groupID.toString());
+    const decrypedFactoryID = atob(factoryID.toString());
+    const decrypedAccountID = atob(accountID.toString());
+    const decrypedStartDate = atob(startDate.toString());
+    const decrypedEndDate = atob(endDate.toString());
+    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString());
     setQuaryParamDetails({
       groupID: decrypedGroupID,
       factoryID: decrypedFactoryID,
@@ -152,16 +181,16 @@ export default function InquiryRegistry(props) {
       startDate: decrypedStartDate,
       endDate: decrypedEndDate,
       IsGuestNavigation: decrypedIsGuestNavigation
-    })
-    if (decrypedIsGuestNavigation === "1") {
-      GenAccCode()
+    });
+    if (decrypedIsGuestNavigation === '1') {
+      GenAccCode();
       var decryptedStartDate = new Date(decrypedStartDate);
       var decryptedEndDate = new Date(decrypedEndDate);
       setStartDateRange(new Date(decryptedStartDate));
       setEndDateRange(new Date(decryptedEndDate));
-      setIsBackButtonEnableForTrialBalace(false)
-      trackPromise(GetDetailsInitialLoad(decryptedStartDate, decryptedEndDate))
-      if (decrypedFactoryID != "0") {
+      setIsBackButtonEnableForTrialBalace(false);
+      trackPromise(GetDetailsInitialLoad(decryptedStartDate, decryptedEndDate));
+      if (decrypedFactoryID != '0') {
         trackPromise(findRelatedFinancialYearByDate(decryptedStartDate));
       }
     } else {
@@ -178,9 +207,12 @@ export default function InquiryRegistry(props) {
   }, [endDateRange]);
 
   async function GenAccCode() {
-    let result22 = await getAccountNamesForDropDown()
+    let result22 = await getAccountNamesForDropDown();
     if (result22 !== undefined) {
-      let ledgerAccountCodeResult = result22.find(x => x.ledgerAccountID.toString() === atob(accountID.toString()).toString());
+      let ledgerAccountCodeResult = result22.find(
+        x =>
+          x.ledgerAccountID.toString() === atob(accountID.toString()).toString()
+      );
       setInquiryRegistry({
         ...inquiryRegistry,
         ledgerAccountCode: ledgerAccountCodeResult.ledgerAccountCode,
@@ -198,13 +230,19 @@ export default function InquiryRegistry(props) {
 
   async function getPermissions() {
     var permissions = await authService.getPermissionsByScreen(screenCode);
-    var isAuthorized = permissions.find(p => p.permissionCode == 'VIEWINQUIRYREGISTRY');
+    var isAuthorized = permissions.find(
+      p => p.permissionCode == 'VIEWINQUIRYREGISTRY'
+    );
 
     if (isAuthorized === undefined) {
       navigate('/404');
     }
-    var isGroupFilterEnabled = permissions.find(p => p.permissionCode == 'GROUPDROPDOWN');
-    var isFactoryFilterEnabled = permissions.find(p => p.permissionCode == 'FACTORYDROPDOWN');
+    var isGroupFilterEnabled = permissions.find(
+      p => p.permissionCode == 'GROUPDROPDOWN'
+    );
+    var isFactoryFilterEnabled = permissions.find(
+      p => p.permissionCode == 'FACTORYDROPDOWN'
+    );
 
     setPermissions({
       ...permissionList,
@@ -216,7 +254,7 @@ export default function InquiryRegistry(props) {
       ...inquiryRegistry,
       groupID: parseInt(tokenService.getGroupIDFromToken()),
       factoryID: parseInt(tokenService.getFactoryIDFromToken())
-    })
+    });
   }
 
   async function getGroupsForDropdown() {
@@ -230,9 +268,12 @@ export default function InquiryRegistry(props) {
   }
 
   async function getAccountNamesForDropDown() {
-    const ledgerAccount = await services.GetLedgerAccountNamesandCodeForDropdown(inquiryRegistry.groupID, inquiryRegistry.factoryID);
+    const ledgerAccount = await services.GetLedgerAccountNamesandCodeForDropdown(
+      inquiryRegistry.groupID,
+      inquiryRegistry.factoryID
+    );
     setLedgerAccounts(ledgerAccount);
-    return ledgerAccount
+    return ledgerAccount;
   }
 
   async function GetDetailsInitialLoad(startDate, endDate) {
@@ -242,9 +283,11 @@ export default function InquiryRegistry(props) {
       startDate: startDate,
       endDate: endDate,
       ledgerAccountID: parseInt(inquiryRegistry.ledgerAccountID)
-    }
+    };
+
     const transaction = await services.getLedgerTrasactionDetails(model);
-    if (transaction.statusCode == "Success" && transaction.data != null) {
+
+    if (transaction.statusCode == 'Success' && transaction.data != null) {
       SetOpeningBalance({
         ...openingBalance,
         totalDebit: transaction.data.openingBalance.totalDebit.toFixed(2),
@@ -253,26 +296,37 @@ export default function InquiryRegistry(props) {
       setTransactionDetails(transaction.data.inquiryRegistryDetails);
       calTotal(transaction.data.inquiryRegistryDetails);
       createDataForExcel(transaction.data.inquiryRegistryDetails);
-    }
-    else {
-      alert.error("Please fill all the tabs");
+    } else {
+      alert.error('Please fill all the tabs');
     }
     setPdfExcelGeneralDetails({
-      groupName: (groups[model.groupID].toString()),
-      factoryName: (factories[model.factoryID]).toString(),
-      fromDate: (startDateRange.toLocaleString('en-us', { month: 'long' }) + " " + startDateRange.getDate() + ", " + startDateRange.getFullYear()).toString(),
-      endDate: (endDateRange.toLocaleString('en-us', { month: 'long' }) + " " + endDateRange.getDate() + ", " + endDateRange.getFullYear()).toString(),
-    })
+      groupName: groups[model.groupID].toString(),
+      factoryName: factories[model.factoryID].toString(),
+      fromDate: (
+        startDateRange.toLocaleString('en-us', { month: 'long' }) +
+        ' ' +
+        startDateRange.getDate() +
+        ', ' +
+        startDateRange.getFullYear()
+      ).toString(),
+      endDate: (
+        endDateRange.toLocaleString('en-us', { month: 'long' }) +
+        ' ' +
+        endDateRange.getDate() +
+        ', ' +
+        endDateRange.getFullYear()
+      ).toString()
+    });
   }
 
   async function GetDetails() {
     if (moment(endDateRange).diff(maxEndDate, 'days') > 0) {
-      alert.error("End date should not be after financial year end date");
+      alert.error('End date should not be after financial year end date');
       return;
     }
 
     if (moment(minEndDate).diff(endDateRange, 'days') > 0) {
-      alert.error("End date should not be befor financial year start date");
+      alert.error('End date should not be befor financial year start date');
       return;
     }
     let model = {
@@ -281,19 +335,30 @@ export default function InquiryRegistry(props) {
       startDate: startDateRange,
       endDate: endDateRange,
       ledgerAccountID: parseInt(inquiryRegistry.ledgerAccountID)
-    }
+    };
 
     setPdfExcelGeneralDetails({
-      groupName: (groups[model.groupID].toString()),
-      factoryName: (factories[model.factoryID]).toString(),
-      fromDate: (startDateRange.toLocaleString('en-us', { month: 'long' }) + " " + startDateRange.getDate() + ", " + startDateRange.getFullYear()).toString(),
-      endDate: (endDateRange.toLocaleString('en-us', { month: 'long' }) + " " + endDateRange.getDate() + ", " + endDateRange.getFullYear()).toString(),
-    })
+      groupName: groups[model.groupID].toString(),
+      factoryName: factories[model.factoryID].toString(),
+      fromDate: (
+        startDateRange.toLocaleString('en-us', { month: 'long' }) +
+        ' ' +
+        startDateRange.getDate() +
+        ', ' +
+        startDateRange.getFullYear()
+      ).toString(),
+      endDate: (
+        endDateRange.toLocaleString('en-us', { month: 'long' }) +
+        ' ' +
+        endDateRange.getDate() +
+        ', ' +
+        endDateRange.getFullYear()
+      ).toString()
+    });
     const transaction = await services.getLedgerTrasactionDetails(model);
-    if (transaction.statusCode == "Success" && transaction.data != null) {
-
+    if (transaction.statusCode == 'Success' && transaction.data != null) {
       if (transaction.data.inquiryRegistryDetails.length <= 0) {
-        alert.error("NO RECORDS TO DISPLAY");
+        alert.error('NO RECORDS TO DISPLAY');
       }
 
       SetOpeningBalance({
@@ -304,77 +369,88 @@ export default function InquiryRegistry(props) {
       setTransactionDetails(transaction.data.inquiryRegistryDetails);
       calTotal(transaction.data.inquiryRegistryDetails);
       createDataForExcel(transaction.data.inquiryRegistryDetails);
-    }
-    else {
-      alert.error("Please fill all the tabs");
+    } else {
+      alert.error('Please fill all the tabs');
     }
   }
 
   async function createDataForExcel(array) {
     var res = [];
+    const formattedStartDate = new Date(startDateRange).toISOString();
+    res.push({
+      ReceiptNo: '-',
+      Date: `${formattedStartDate}`,
+      Description: 'Opening Balance',
+      ChequeNo: '-',
+      Debit: '-',
+      Credit: '-',
+      Balance: Math.abs(
+        openingBalance.totalDebit - openingBalance.totalCredit
+      ).toFixed(2)
+    });
+
     if (array != null) {
       array.map(x => {
         var vr = {
-          ReferenceNo: x.referenceNumber,
+          ReceiptNo: x.referenceNumber,
           Date: x.date,
-          Description: x.description,
-          ChequeNo: x.chequeNumber,
-          RegNo: x.registrationNumber,
+          Description: x.description ? x.description : '-',
+          ChequeNo: x.modeoftransactionNumber ? x.modeoftransactionNumber : '-',
           Debit: CurrencyCommaSeperation(x.debit),
-          Credit: CurrencyCommaSeperation(x.credit)
-        }
+          Credit: CurrencyCommaSeperation(x.credit),
+          Balance: CalBalance(openingBalance, x.debit, x.credit)
+        };
         res.push(vr);
       });
     }
-
     return res;
   }
 
-
   async function createFile() {
-
     var file = await createDataForExcel(transactionDetails);
     var settings = {
-      sheetName: 'Inquiry Registry Report',
-      fileName: 'Inquiry Registry Report',
+      sheetName: 'Ledger Account Reviewing Report',
+      fileName: 'Ledger Account Reviewing Report',
       writeOptions: {}
-    }
+    };
 
-    let keys = Object.keys(file[0])
+    let keys = Object.keys(file[0]);
     let tempcsvHeaders = csvHeaders;
     keys.map((sitem, i) => {
-      tempcsvHeaders.push({ label: sitem, value: sitem })
-    })
+      tempcsvHeaders.push({ label: sitem, value: sitem });
+    });
 
     let dataA = [
       {
-        sheet: 'Inquiry Registry Report',
+        sheet: 'Ledger Account Reviewing Report',
         columns: tempcsvHeaders,
         content: file
       }
-    ]
+    ];
 
     xlsx(dataA, settings);
   }
 
-
   function generateDropDownMenu(data) {
-    let items = []
+    let items = [];
     if (data != null) {
       for (const [key, value] of Object.entries(data)) {
-        items.push(<MenuItem key={key} value={key}>{value}</MenuItem>);
+        items.push(
+          <MenuItem key={key} value={key}>
+            {value}
+          </MenuItem>
+        );
       }
     }
-    return items
+    return items;
   }
-
 
   function calTotal(data) {
     let debitSum = 0;
     let creditSum = 0;
     data.forEach(element => {
       debitSum += parseFloat(element.debit);
-      creditSum += parseFloat(element.credit)
+      creditSum += parseFloat(element.credit);
     });
     setTransactionTotal({
       ...transactionTotal,
@@ -383,9 +459,26 @@ export default function InquiryRegistry(props) {
     });
   }
 
+  function CalBalance(openingBalance, debit, credit) {
+    let balance = 0;
+
+    if (openingBalance.totalDebit - openingBalance.totalCredit >= 0) {
+      balance =
+        openingBalance.totalDebit - openingBalance.totalCredit + debit - credit;
+    } else {
+      balance =
+        openingBalance.totalCredit - openingBalance.totalDebit + credit - debit;
+    }
+
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(balance);
+  }
+
   function handleChange(e) {
     const target = e.target;
-    const value = target.value
+    const value = target.value;
     setInquiryRegistry({
       ...inquiryRegistry,
       [e.target.name]: value
@@ -393,7 +486,6 @@ export default function InquiryRegistry(props) {
   }
 
   function handleSearchDropdownChangeLedger(data, e) {
-
     if (data === undefined || data === null) {
       setInquiryRegistry({
         ...inquiryRegistry,
@@ -401,8 +493,8 @@ export default function InquiryRegistry(props) {
       });
       return;
     } else {
-      var nameV = "ledgerAccountID";
-      var valueV = data["ledgerAccountID"];
+      var nameV = 'ledgerAccountID';
+      var valueV = data['ledgerAccountID'];
 
       setInquiryRegistry({
         ...inquiryRegistry,
@@ -413,15 +505,19 @@ export default function InquiryRegistry(props) {
   }
 
   async function findRelatedFinancialYearByDate(startDate) {
-    const financialYear = await services.findRelatedFinancialYearByDate(inquiryRegistry.groupID, inquiryRegistry.factoryID, startDate.toLocaleDateString());
+    const financialYear = await services.findRelatedFinancialYearByDate(
+      inquiryRegistry.groupID,
+      inquiryRegistry.factoryID,
+      startDate.toLocaleDateString()
+    );
 
     setMinEndDate(startDate);
     setMaxEndDate(financialYear);
   }
 
   async function startDateOnChange(e) {
-    setStartDateRange(e)
-    findRelatedFinancialYearByDate(e)
+    setStartDateRange(e);
+    findRelatedFinancialYearByDate(e);
   }
 
   function cardTitle(titleName) {
@@ -430,43 +526,93 @@ export default function InquiryRegistry(props) {
         <Grid item md={10} xs={12}>
           {titleName}
         </Grid>
-        {
-          IsBackButtonEnableForTrialBalace ?
-            <Grid item md={2} xs={12}>
-              <PageHeader
-                onClick={handleClick}
-              />
-            </Grid> : null
-        }
-
+        {IsBackButtonEnableForTrialBalace ? (
+          <Grid item md={2} xs={12}>
+            <PageHeader onClick={handleClick} />
+          </Grid>
+        ) : null}
       </Grid>
-    )
+    );
   }
 
   const handleClick = () => {
-    const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString())
-    const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString())
-    const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString())
-    const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString())
+    const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString());
+    const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString());
+    const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString());
+    const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString());
 
-    navigate('/app/trailBalanceReportReturn/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1"));
-  }
+    navigate(
+      '/app/trailBalanceReportReturn/' +
+        encryptedGroupID +
+        '/' +
+        encryptedFactoryID +
+        '/' +
+        encryptedStartDate +
+        '/' +
+        encryptedEndDate +
+        '/' +
+        btoa('1')
+    );
+  };
 
   function NavigateToGenaralJournal(referenceNumber, voucherTypeID) {
-    const encryptedGroupID = btoa(inquiryRegistry.groupID.toString())
-    const encryptedFactoryID = btoa(inquiryRegistry.factoryID.toString())
-    const encryptedAccountID = btoa(inquiryRegistry.ledgerAccountID.toString())
-    const encryptedStartDate = btoa(startDateRange.toString())
-    const encryptedEndDate = btoa(endDateRange.toString())
+    const encryptedGroupID = btoa(inquiryRegistry.groupID.toString());
+    const encryptedFactoryID = btoa(inquiryRegistry.factoryID.toString());
+    const encryptedAccountID = btoa(inquiryRegistry.ledgerAccountID.toString());
+    const encryptedStartDate = btoa(startDateRange.toString());
+    const encryptedEndDate = btoa(endDateRange.toString());
     const encryptedReferenceNumber = btoa(referenceNumber.toString());
     if (voucherTypeID == 1) {
-      navigate('/app/Payment/view/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedAccountID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1") + '/' + encryptedReferenceNumber);
-    }
-    else if (voucherTypeID == 2) {
-      navigate('/app/Receiving/view/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedAccountID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1") + '/' + encryptedReferenceNumber);
-    }
-    else {
-      navigate('/app/generalJournal/view/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedAccountID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1") + '/' + encryptedReferenceNumber);
+      navigate(
+        '/app/Payment/view/' +
+          encryptedGroupID +
+          '/' +
+          encryptedFactoryID +
+          '/' +
+          encryptedAccountID +
+          '/' +
+          encryptedStartDate +
+          '/' +
+          encryptedEndDate +
+          '/' +
+          btoa('1') +
+          '/' +
+          encryptedReferenceNumber
+      );
+    } else if (voucherTypeID == 2) {
+      navigate(
+        '/app/Receiving/view/' +
+          encryptedGroupID +
+          '/' +
+          encryptedFactoryID +
+          '/' +
+          encryptedAccountID +
+          '/' +
+          encryptedStartDate +
+          '/' +
+          encryptedEndDate +
+          '/' +
+          btoa('1') +
+          '/' +
+          encryptedReferenceNumber
+      );
+    } else {
+      navigate(
+        '/app/generalJournal/view/' +
+          encryptedGroupID +
+          '/' +
+          encryptedFactoryID +
+          '/' +
+          encryptedAccountID +
+          '/' +
+          encryptedStartDate +
+          '/' +
+          encryptedEndDate +
+          '/' +
+          btoa('1') +
+          '/' +
+          encryptedReferenceNumber
+      );
     }
   }
   return (
@@ -480,28 +626,25 @@ export default function InquiryRegistry(props) {
               factoryID: inquiryRegistry.factoryID,
               ledgerAccountID: inquiryRegistry.ledgerAccountID
             }}
-            validationSchema={
-              Yup.object().shape({
-                groupID: Yup.number().required('Group is required').min("1", 'Group is required'),
-                factoryID: Yup.number().required('Estate is required').min("1", 'Estate is required'),
-                ledgerAccountID: Yup.number().required('Ledger account name is required').min("1", 'Ledger account name is required')
-              })
-            }
+            validationSchema={Yup.object().shape({
+              groupID: Yup.number()
+                .required('Group is required')
+                .min('1', 'Group is required'),
+              factoryID: Yup.number()
+                .required('Estate is required')
+                .min('1', 'Estate is required'),
+              ledgerAccountID: Yup.number()
+                .required('Ledger account name is required')
+                .min('1', 'Ledger account name is required')
+            })}
             enableReinitialize
             onSubmit={() => trackPromise(GetDetails())}
           >
-            {({
-              errors,
-              handleBlur,
-              handleSubmit,
-              touched
-            }) => (
+            {({ errors, handleBlur, handleSubmit, touched }) => (
               <form onSubmit={handleSubmit}>
                 <Box mt={0}>
                   <Card>
-                    <CardHeader
-                      title={cardTitle(title)}
-                    />
+                    <CardHeader title={cardTitle(title)} />
                     <PerfectScrollbar>
                       <Divider />
                       <CardContent>
@@ -510,14 +653,15 @@ export default function InquiryRegistry(props) {
                             <InputLabel shrink id="groupID">
                               Group *
                             </InputLabel>
-                            <TextField select
+                            <TextField
+                              select
                               error={Boolean(touched.groupID && errors.groupID)}
                               fullWidth
                               helperText={touched.groupID && errors.groupID}
                               name="groupID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange(e)}
+                              onChange={e => handleChange(e)}
                               value={inquiryRegistry.groupID}
                               variant="outlined"
                               id="groupID"
@@ -530,16 +674,19 @@ export default function InquiryRegistry(props) {
 
                           <Grid item md={3} xs={12}>
                             <InputLabel shrink id="factoryID">
-                                Estate *
+                              Estate *
                             </InputLabel>
-                            <TextField select
-                              error={Boolean(touched.factoryID && errors.factoryID)}
+                            <TextField
+                              select
+                              error={Boolean(
+                                touched.factoryID && errors.factoryID
+                              )}
                               fullWidth
                               helperText={touched.factoryID && errors.factoryID}
                               name="factoryID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange(e)}
+                              onChange={e => handleChange(e)}
                               value={inquiryRegistry.factoryID}
                               variant="outlined"
                               id="factoryID"
@@ -551,21 +698,27 @@ export default function InquiryRegistry(props) {
                           </Grid>
 
                           <Grid item md={3} xs={12}>
-                            <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>From Date *</InputLabel>
+                            <InputLabel
+                              shrink
+                              id="date"
+                              style={{ marginBottom: '-8px' }}
+                            >
+                              From Date *
+                            </InputLabel>
                             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                               <KeyboardDatePicker
                                 fullWidth
                                 inputVariant="outlined"
                                 format="dd/MM/yyyy"
                                 margin="dense"
-                                name='startDate'
-                                id='startDate'
+                                name="startDate"
+                                id="startDate"
                                 value={startDateRange}
-                                onChange={(e) => {
-                                  startDateOnChange(e)
+                                onChange={e => {
+                                  startDateOnChange(e);
                                 }}
                                 KeyboardButtonProps={{
-                                  'aria-label': 'change date',
+                                  'aria-label': 'change date'
                                 }}
                                 autoOk
                               />
@@ -573,21 +726,27 @@ export default function InquiryRegistry(props) {
                           </Grid>
 
                           <Grid item md={3} xs={12}>
-                            <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>To Date *</InputLabel>
+                            <InputLabel
+                              shrink
+                              id="date"
+                              style={{ marginBottom: '-8px' }}
+                            >
+                              To Date *
+                            </InputLabel>
                             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                               <KeyboardDatePicker
                                 fullWidth
                                 inputVariant="outlined"
                                 format="dd/MM/yyyy"
                                 margin="dense"
-                                name='startDate'
-                                id='startDate'
+                                name="startDate"
+                                id="startDate"
                                 value={endDateRange}
-                                onChange={(e) => {
-                                  setEndDateRange(e)
+                                onChange={e => {
+                                  setEndDateRange(e);
                                 }}
                                 KeyboardButtonProps={{
-                                  'aria-label': 'change date',
+                                  'aria-label': 'change date'
                                 }}
                                 autoOk
                                 maxDate={maxEndDate}
@@ -600,36 +759,48 @@ export default function InquiryRegistry(props) {
                             <InputLabel shrink id="ledgerAccountID">
                               Ledger Account Name *
                             </InputLabel>
-                            { atob(IsGuestNavigation).toString() === "1"? 
-                                <TextField
-                                  variant="outlined"
-                                  name="ledgerAccountID"
-                                  id="ledgerAccountID"
-                                  fullWidth
-                                  size='small'
-                                  value={inquiryRegistry.ledgerAccountName}
-                                  disabled={true}
-                                />
-                            :
-                            <Autocomplete
-                              id="ledgerAccountID"
-                              options={ledgerAccounts}
-                              getOptionLabel={(option) =>option.ledgerAccountName.toString()}
-                              onChange={(e, value) => handleSearchDropdownChangeLedger(value, e)}
-                              renderInput={(params) =>
-                                <TextField {...params}
-                                  variant="outlined"
-                                  name="ledgerAccountID"
-                                  fullWidth
-                                  size='small'
-                                  value={inquiryRegistry.ledgerAccountID}
-                                  //getOptionDisabled={true}
-                                  helperText={touched.ledgerAccountID && errors.ledgerAccountID}
-                                  onBlur={handleBlur}
-                                  error={Boolean(touched.ledgerAccountID && errors.ledgerAccountID)}
-                                />
-                              }
-                            />}
+                            {atob(IsGuestNavigation).toString() === '1' ? (
+                              <TextField
+                                variant="outlined"
+                                name="ledgerAccountID"
+                                id="ledgerAccountID"
+                                fullWidth
+                                size="small"
+                                value={inquiryRegistry.ledgerAccountName}
+                                disabled={true}
+                              />
+                            ) : (
+                              <Autocomplete
+                                id="ledgerAccountID"
+                                options={ledgerAccounts}
+                                getOptionLabel={option =>
+                                  option.ledgerAccountName.toString()
+                                }
+                                onChange={(e, value) =>
+                                  handleSearchDropdownChangeLedger(value, e)
+                                }
+                                renderInput={params => (
+                                  <TextField
+                                    {...params}
+                                    variant="outlined"
+                                    name="ledgerAccountID"
+                                    fullWidth
+                                    size="small"
+                                    value={inquiryRegistry.ledgerAccountID}
+                                    //getOptionDisabled={true}
+                                    helperText={
+                                      touched.ledgerAccountID &&
+                                      errors.ledgerAccountID
+                                    }
+                                    onBlur={handleBlur}
+                                    error={Boolean(
+                                      touched.ledgerAccountID &&
+                                        errors.ledgerAccountID
+                                    )}
+                                  />
+                                )}
+                              />
+                            )}
                           </Grid>
                           <Grid item md={3} xs={12}>
                             <InputLabel shrink id="ledgerAccountCode">
@@ -638,13 +809,12 @@ export default function InquiryRegistry(props) {
                             <TextField
                               fullWidth
                               name="ledgerAccountCode"
-                              size='small'
+                              size="small"
                               value={inquiryRegistry.ledgerAccountCode}
                               variant="outlined"
                               id="ledgerAccountCode"
                               disabled={true}
-                            >
-                            </TextField>
+                            ></TextField>
                           </Grid>
                           <Grid container justify="flex-end">
                             <Box pr={2}>
@@ -659,80 +829,179 @@ export default function InquiryRegistry(props) {
                           </Grid>
                         </Grid>
                         <br />
-
                       </CardContent>
 
-                      {transactionDetails.length > 0 ?
+                      {transactionDetails.length > 0 ? (
                         <CardContent>
-                          <Box >
-                            <Grid container md={12} spacing={2}  >
-                              <Grid item md={3} xs={3}> </Grid>
+                          <Box>
+                            <Grid container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
+                              </Grid>
                               <Grid item md={4} xs={4}>
                                 <InputLabel></InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
                               <Grid item md={1} xs={1}>
-                                <InputLabel style={{ textAlign: "center" }}><b>Dr</b></InputLabel>
+                                {' '}
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
                               <Grid item md={1} xs={1}>
-                                <InputLabel style={{ textAlign: "center" }}><b>Cr</b></InputLabel>
+                                <InputLabel style={{ textAlign: 'center' }}>
+                                  <b>Dr</b>
+                                </InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                <InputLabel style={{ textAlign: 'center' }}>
+                                  <b>Cr</b>
+                                </InputLabel>
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
                             </Grid>
-                            <Grid container md={12} spacing={2} >
-                              <Grid item md={3} xs={3}> </Grid>
+                            <Grid container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
+                              </Grid>
                               <Grid item md={4} xs={4}>
-                                <InputLabel><b>Opening Balance as at {startDateRange.toLocaleDateString()} </b></InputLabel>
+                                <InputLabel>
+                                  <b>
+                                    Opening Balance as at{' '}
+                                    {startDateRange.toLocaleDateString()}{' '}
+                                  </b>
+                                </InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>  : </Grid>
-                              <Grid style={{ textAlign: "center" }} item md={1} xs={1}>
-                                <Typography variant='h6' >
-                                  <CountUp decimals={2} separator=',' end={(openingBalance.totalDebit - openingBalance.totalCredit) >= 0 ? (openingBalance.totalDebit - openingBalance.totalCredit) : null} duration={0.1} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                                :{' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'center' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      openingBalance.totalDebit -
+                                        openingBalance.totalCredit >=
+                                      0
+                                        ? openingBalance.totalDebit -
+                                          openingBalance.totalCredit
+                                        : null
+                                    }
+                                    duration={0.1}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
-                              <Grid style={{ textAlign: "center" }} item md={1} xs={1}>
-                                <Typography variant='h6' >
-                                  <CountUp decimals={2} separator=',' end={(openingBalance.totalCredit - openingBalance.totalDebit) >= 0 ? (openingBalance.totalCredit - openingBalance.totalDebit) : null} duration={0.1} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'center' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      openingBalance.totalCredit -
+                                        openingBalance.totalDebit >=
+                                      0
+                                        ? openingBalance.totalCredit -
+                                          openingBalance.totalDebit
+                                        : null
+                                    }
+                                    duration={0.1}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
                             </Grid>
                           </Box>
-                        </CardContent> : null}
-                      <Box minWidth={1050} padding='5px'>
-                        {transactionDetails.length > 0 ?
+                        </CardContent>
+                      ) : null}
+                      <Box minWidth={1050} padding="5px">
+                        {transactionDetails.length > 0 ? (
                           <MaterialTable
                             title="Multiple Actions Preview"
                             columns={[
-                              { title: 'Reference No', field: 'referenceNumber' },
+                              { title: 'Receipt No', field: 'referenceNumber' },
                               {
-                                title: 'Date', field: 'date',
+                                title: 'Date',
+                                field: 'date',
                                 render: rowData => rowData.date.split('T')[0]
-
-                              },
-                              { title: 'Description', field: 'description' },
-                              { title: 'Cheque No', field: 'chequeNumber' },
-                              { title: 'Reg No', field: 'registrationNumber' },
-                              {
-                                title: 'Debit(Rs.)', field: 'debit', align: "right", headerAlign: 'right', render: (rowData) => <CountUp
-                                  end={rowData.debit}
-                                  separator=","
-                                  decimals={2}
-                                  decimal="."
-                                  duration={0.1}
-                                />
                               },
                               {
-                                title: 'Credit(Rs.)', field: 'credit', align: "right", headerAlign: 'right',
-                                render: (rowData) => <CountUp
-                                  end={rowData.credit}
-                                  separator=","
-                                  decimals={2}
-                                  decimal="."
-                                  duration={0.1} />
+                                title: 'Description',
+                                field: 'description',
+                                render: rowData =>
+                                  rowData.description
+                                    ? rowData.description
+                                    : '-'
                               },
+                              {
+                                title: 'Cheque No',
+                                field: 'modeoftransactionNumber',
+                                render: rowData =>
+                                  rowData.modeoftransactionNumber
+                                    ? rowData.modeoftransactionNumber
+                                    : '-'
+                              },
+                              {
+                                title: 'Debit(Rs.)',
+                                field: 'debit',
+                                align: 'right',
+                                headerAlign: 'right',
+                                render: rowData => (
+                                  <CountUp
+                                    end={rowData.debit}
+                                    separator=","
+                                    decimals={2}
+                                    decimal="."
+                                    duration={0.1}
+                                  />
+                                )
+                              },
+                              {
+                                title: 'Credit(Rs.)',
+                                field: 'credit',
+                                align: 'right',
+                                headerAlign: 'right',
+                                render: rowData => (
+                                  <CountUp
+                                    end={rowData.credit}
+                                    separator=","
+                                    decimals={2}
+                                    decimal="."
+                                    duration={0.1}
+                                  />
+                                )
+                              },
+                              {
+                                title: 'Balance(Rs.)',
+                                field: 'calculatedBalance',
+                                align: 'right',
+                                headerAlign: 'right',
+                                render: rowData =>
+                                  CalBalance(
+                                    openingBalance,
+                                    rowData.debit,
+                                    rowData.credit
+                                  )
+                              }
                             ]}
                             data={transactionDetails}
                             options={{
@@ -744,99 +1013,264 @@ export default function InquiryRegistry(props) {
                               pageSize: 10,
                               pageSizeOptions: [10, 25, 50]
                             }}
-                            actions={[
-                              {
-                                icon: VisibilityIcon,
-                                tooltip: 'View Ledger Entries',
-                                onClick: (event, transactionDetails) => NavigateToGenaralJournal(transactionDetails.referenceNumber, transactionDetails.voucherTypeID)
-
-                              }
-                            ]}
-                          /> : null}
+                            // actions={[
+                            //   {
+                            //     icon: VisibilityIcon,
+                            //     tooltip: 'View Ledger Entries',
+                            //     onClick: (event, transactionDetails) =>
+                            //       NavigateToGenaralJournal(
+                            //         transactionDetails.referenceNumber,
+                            //         transactionDetails.voucherTypeID
+                            //       )
+                            //   }
+                            // ]}
+                          />
+                        ) : null}
                       </Box>
 
-                      {transactionDetails.length > 0 ?
+                      {transactionDetails.length > 0 ? (
                         <CardContent>
-                          <Box >
+                          <Box>
                             {/*  <Grid container md={6} spacing={2} style={{ marginTop: '1rem' }}></Grid>*/}
-                            <Grid container md={12} spacing={2}  >
-                              <Grid item md={3} xs={3}> </Grid>
+                            <Grid container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
+                              </Grid>
                               <Grid item md={4} xs={4}>
                                 <InputLabel></InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
                               <Grid item md={1} xs={1}>
-                                <InputLabel style={{ textAlign: "center" }}><b>Dr</b></InputLabel>
+                                {' '}
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
                               <Grid item md={1} xs={1}>
-                                <InputLabel style={{ textAlign: "center" }}><b>Cr</b></InputLabel>
+                                <InputLabel style={{ textAlign: 'center' }}>
+                                  <b>Dr</b>
+                                </InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                <InputLabel style={{ textAlign: 'center' }}>
+                                  <b>Cr</b>
+                                </InputLabel>
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
                             </Grid>
-                            <Grid container md={12} spacing={2}  >
-                              <Grid item md={3} xs={3}> </Grid>
-                              <Grid item md={4} xs={4}>
-                                <InputLabel><b>Total (Rs) From {startDateRange.toLocaleDateString()} To {endDateRange.toLocaleDateString()} </b></InputLabel>
+                            <Grid container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
                               </Grid>
-                              <Grid item md={1} xs={1}>  : </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1}>
-                                <Typography variant='h6' >
-                                  <CountUp decimals={2} separator=',' end={transactionTotal.debit} duration={0.1} className={classes.succes} />
+                              <Grid item md={4} xs={4}>
+                                <InputLabel>
+                                  <b>
+                                    Total (Rs) From{' '}
+                                    {startDateRange.toLocaleDateString()} To{' '}
+                                    {endDateRange.toLocaleDateString()}{' '}
+                                  </b>
+                                </InputLabel>
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                                :{' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={transactionTotal.debit}
+                                    duration={0.1}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1}>
-                                <Typography variant='h6'>
-                                  <CountUp decimals={2} separator=',' end={transactionTotal.credit} duration={0.1} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={transactionTotal.credit}
+                                    duration={0.1}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
-                            </Grid>
-                            <Grid container md={12} spacing={2} >
-                              <Grid item md={3} xs={3}> </Grid>
-                              <Grid item md={4} xs={4}>
-                                <InputLabel><b>Net Change (Rs) From {startDateRange.toLocaleDateString()} To {endDateRange.toLocaleDateString()}  </b></InputLabel>
+                              <Grid item md={1} xs={1}>
+                                {' '}
                               </Grid>
-                              <Grid item md={1} xs={1}>  : </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1}>
-                                <Typography variant='h6'>
-                                  <CountUp decimals={2} separator=',' end={(transactionTotal.debit - transactionTotal.credit) >= 0 ? (transactionTotal.debit - transactionTotal.credit) : null} duration={0} className={classes.succes} />
+                            </Grid>
+                            <Grid container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
+                              </Grid>
+                              <Grid item md={4} xs={4}>
+                                <InputLabel>
+                                  <b>
+                                    Net Change (Rs) From{' '}
+                                    {startDateRange.toLocaleDateString()} To{' '}
+                                    {endDateRange.toLocaleDateString()}{' '}
+                                  </b>
+                                </InputLabel>
+                              </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                                :{' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      transactionTotal.debit -
+                                        transactionTotal.credit >=
+                                      0
+                                        ? transactionTotal.debit -
+                                          transactionTotal.credit
+                                        : null
+                                    }
+                                    duration={0}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
 
-                              <Grid item md={1} xs={1}>   </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1}>
-                                <Typography variant='h6'>
-                                  <CountUp decimals={2} separator=',' end={(transactionTotal.credit - transactionTotal.debit) >= 0 ? (transactionTotal.credit - transactionTotal.debit) : null} duration={0} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      transactionTotal.credit -
+                                        transactionTotal.debit >=
+                                      0
+                                        ? transactionTotal.credit -
+                                          transactionTotal.debit
+                                        : null
+                                    }
+                                    duration={0}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
                             </Grid>
-                            <Grid p={3} container md={12} spacing={2} >
-                              <Grid item md={3} xs={3}> </Grid>
+                            <Grid p={3} container md={12} spacing={2}>
+                              <Grid item md={3} xs={3}>
+                                {' '}
+                              </Grid>
                               <Grid item md={4} xs={4}>
-                                <InputLabel><b>To Date Balance(Rs) as at {new Date().toISOString().split('T')[0]} </b></InputLabel>
+                                <InputLabel>
+                                  <b>
+                                    To Date Balance(Rs) as at{' '}
+                                    {new Date().toISOString().split('T')[0]}{' '}
+                                  </b>
+                                </InputLabel>
                               </Grid>
-                              <Grid item md={1} xs={1}>  : </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1}>
-                                <Typography variant='h6'>
-                                  <CountUp decimals={2} separator=',' end={((parseInt(openingBalance.totalDebit) + parseInt(transactionTotal.debit)) - (parseInt(openingBalance.totalCredit) + parseInt(transactionTotal.credit))) >= 0 ? ((parseInt(openingBalance.totalDebit) + parseInt(transactionTotal.debit)) - (parseInt(openingBalance.totalCredit) + parseInt(transactionTotal.credit))) : null} duration={0} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                                :{' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      parseInt(openingBalance.totalDebit) +
+                                        parseInt(transactionTotal.debit) -
+                                        (parseInt(openingBalance.totalCredit) +
+                                          parseInt(transactionTotal.credit)) >=
+                                      0
+                                        ? parseInt(openingBalance.totalDebit) +
+                                          parseInt(transactionTotal.debit) -
+                                          (parseInt(
+                                            openingBalance.totalCredit
+                                          ) +
+                                            parseInt(transactionTotal.credit))
+                                        : null
+                                    }
+                                    duration={0}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
-                              <Grid style={{ textAlign: "right" }} item md={1} xs={1} >
-                                <Typography variant='h6'>
-                                  <CountUp decimals={2} separator=',' end={((parseInt(openingBalance.totalCredit) + parseInt(transactionTotal.credit)) - (parseInt(openingBalance.totalDebit) + parseInt(transactionTotal.debit))) >= 0 ? ((parseInt(openingBalance.totalCredit) + parseInt(transactionTotal.credit)) - (parseInt(openingBalance.totalDebit) + parseInt(transactionTotal.debit))) : null} duration={0} className={classes.succes} />
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
+                              <Grid
+                                style={{ textAlign: 'right' }}
+                                item
+                                md={1}
+                                xs={1}
+                              >
+                                <Typography variant="h6">
+                                  <CountUp
+                                    decimals={2}
+                                    separator=","
+                                    end={
+                                      parseInt(openingBalance.totalCredit) +
+                                        parseInt(transactionTotal.credit) -
+                                        (parseInt(openingBalance.totalDebit) +
+                                          parseInt(transactionTotal.debit)) >=
+                                      0
+                                        ? parseInt(openingBalance.totalCredit) +
+                                          parseInt(transactionTotal.credit) -
+                                          (parseInt(openingBalance.totalDebit) +
+                                            parseInt(transactionTotal.debit))
+                                        : null
+                                    }
+                                    duration={0}
+                                    className={classes.succes}
+                                  />
                                 </Typography>
                               </Grid>
-                              <Grid item md={1} xs={1}>   </Grid>
+                              <Grid item md={1} xs={1}>
+                                {' '}
+                              </Grid>
                             </Grid>
                             {/* </Grid> */}
                           </Box>
-                        </CardContent> : null}
+                        </CardContent>
+                      ) : null}
 
-                      {transactionDetails.length > 0 ?
+                      {transactionDetails.length > 0 ? (
                         <Box display="flex" justifyContent="flex-end" p={2}>
                           <Button
                             color="primary"
@@ -851,23 +1285,31 @@ export default function InquiryRegistry(props) {
                           </Button>
                           <div>&nbsp;</div>
                           <ReactToPrint
-                            documentTitle={"Inquiry Register"}
-                            trigger={() => <Button
-                              color="primary"
-                              id="btnCancel"
-                              variant="contained"
-                              style={{ marginRight: '1rem' }}
-                              className={classes.colorCancel}
-                            >
-                              PDF
-                            </Button>}
+                            documentTitle={'Inquiry Register'}
+                            trigger={() => (
+                              <Button
+                                color="primary"
+                                id="btnCancel"
+                                variant="contained"
+                                style={{ marginRight: '1rem' }}
+                                className={classes.colorCancel}
+                              >
+                                PDF
+                              </Button>
+                            )}
                             content={() => componentRef.current}
                           />
                           <div hidden={true}>
-                            <CreatePDF ref={componentRef} InquiryRegistry={inquiryRegistry}
-                              PdfExcelGeneralDetails={PdfExcelGeneralDetails} TransactionDetails={transactionDetails} />
+                            <CreatePDF
+                              ref={componentRef}
+                              InquiryRegistry={inquiryRegistry}
+                              PdfExcelGeneralDetails={PdfExcelGeneralDetails}
+                              TransactionDetails={transactionDetails}
+                              openingBalance={openingBalance}
+                            />
                           </div>
-                        </Box> : null}
+                        </Box>
+                      ) : null}
                     </PerfectScrollbar>
                   </Card>
                 </Box>
@@ -877,5 +1319,5 @@ export default function InquiryRegistry(props) {
         </Container>
       </Page>
     </Fragment>
-  )
+  );
 }

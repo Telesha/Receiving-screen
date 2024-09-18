@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 var screenCode = "GENERALJOURNAL"
-export default function GeneralJournalApprove(props) {
+export default function GeneralJournalApprove() {
 
   const { referenceNumber } = useParams();
   const { groupID } = useParams();
@@ -56,7 +56,6 @@ export default function GeneralJournalApprove(props) {
   const [title, setTitle] = useState("Journal")
   const classes = useStyles();
   const [factories, setFactories] = useState();
-  const [transactionTypes, setTransactionTypes] = useState();
   const [groups, setGroups] = useState();
   const [open, setOpen] = useState(true);
   const [interEstateButtonEnable, setInterEstateButtonEnable] = useState(false);
@@ -84,6 +83,7 @@ export default function GeneralJournalApprove(props) {
   const [selectedDueDate, handleDueDateChange] = useState(new Date().toISOString());
   const [journalData, setJournalData] = useState([]);
   const [accountTypeNames, setAccountTypeNames] = useState();
+  const [accountDescriptionsType, setAccountDescriptionsType] = useState({});
   const [creditTotal, setCreditTotal] = useState(0);
   const [debitTotal, setDebitTotal] = useState(0);
   const [status, setStatus] = useState(0);
@@ -99,7 +99,6 @@ export default function GeneralJournalApprove(props) {
     isFactoryFilterEnabled: false
   });
   const [RejectRemark, setRejectRemark] = useState("")
-
   const handleClose = () => {
     setOpen(false);
   };
@@ -119,7 +118,6 @@ export default function GeneralJournalApprove(props) {
 
   useEffect(() => {
     trackPromise(getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID));
-    trackPromise(getTransactionTypes());
     trackPromise(getVoucherTypeList());
     trackPromise(getTransactionModeList());
   }, [generalJournal.factoryID]);
@@ -179,9 +177,9 @@ export default function GeneralJournalApprove(props) {
     }
   }
 
-  async function getTransactionTypes() {
-    const transaction = await services.getTransactionTypeNamesForDropdown();
-    setTransactionTypes(transaction);
+  async function getAccountDescriptionsNormal(accID) {
+    const accountDescriptions = await services.getAccountDescriptionsNormal(accID);
+    setAccountDescriptionsType(accountDescriptions);
   }
 
   async function getAccountTypeNames(groupID, factoryID) {
@@ -248,17 +246,17 @@ export default function GeneralJournalApprove(props) {
     handleDateChange(data[0].date);
 
     let copyArray = data;
-
     let accountNameList = await getAccountTypeNames(data[0].groupID, data[0].factoryID);
-
     let tempArray = [...journalData]
 
     copyArray.forEach(element => {
       let reuslt = GetAll(element.accountTypeName, accountNameList);
+      getAccountDescriptionsNormal(element.accountTypeName)
       tempArray.push(
         {
           accountTypeName: element.accountTypeName,
           description: element.description,
+          descriptionTypeID: element.descriptionTypeID,
           credit: element.credit,
           debit: element.debit,
           ledgerTransactionID: element.ledgerTransactionID,
@@ -312,7 +310,6 @@ export default function GeneralJournalApprove(props) {
       closeOnEscape: true,
       closeOnClickOutside: true,
     });
-
   }
 
   async function Approve(approveModel) {
@@ -339,12 +336,10 @@ export default function GeneralJournalApprove(props) {
   }
 
   async function RejectGeneralJournalTransaction() {
-
     if (RejectRemark === "") {
       alert.error("Rejecting Remark is required");
       return;
     }
-
 
     confirmAlert({
       title: 'Confirm To Reject',
@@ -362,9 +357,8 @@ export default function GeneralJournalApprove(props) {
       closeOnEscape: true,
       closeOnClickOutside: true,
     });
-
-
   }
+
   async function Reject() {
     let rejectModel = {
       groupID: parseInt(generalJournal.groupID.toString()),
@@ -438,7 +432,6 @@ export default function GeneralJournalApprove(props) {
     }
   }
 
-
   function calDebitTotal() {
     let sum = 0;
     journalData.forEach(element => {
@@ -475,10 +468,8 @@ export default function GeneralJournalApprove(props) {
       voucherTypes.forEach(x => {
         items.push(<MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>{x.voucherTypeName}</MenuItem>)
       });
-
     }
     return items
-
   }
 
   function generateDropownForTransactionModeList(dataList) {
@@ -489,7 +480,6 @@ export default function GeneralJournalApprove(props) {
       });
     }
     return items
-
   }
 
   function handleChange2(e) {
@@ -500,9 +490,7 @@ export default function GeneralJournalApprove(props) {
       ...generalJournal,
       [e.target.name]: value
     });
-
   }
-
 
   function isInterEstatehandleChange(e) {
     const target = e.target
@@ -528,9 +516,7 @@ export default function GeneralJournalApprove(props) {
               payModeID: generalJournal.payModeID,
               chequeNumber: generalJournal.chequeNumber,
               isActive: generalJournal.isActive,
-
             }}
-
             onSubmit={(event) => ApproveGeneralGournal(event)}
             enableReinitialize
           >
@@ -601,7 +587,6 @@ export default function GeneralJournalApprove(props) {
                             <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>
                               Date *
                             </InputLabel>
-
                             <MuiPickersUtilsProvider utils={DateFnsUtils}>
                               <KeyboardDatePicker
                                 fullWidth
@@ -623,7 +608,6 @@ export default function GeneralJournalApprove(props) {
                                 }}
                               />
                             </MuiPickersUtilsProvider>
-
                           </Grid>
                         </Grid>
                         <Grid container spacing={3}>
@@ -646,13 +630,11 @@ export default function GeneralJournalApprove(props) {
                                 InputProps={{
                                   readOnly: true,
                                 }}
-
                               >
                                 <MenuItem value="0">--Select Voucher Type--</MenuItem>
                                 {generateDropownForVoucherList(voucherTypes)}
                               </TextField>
                             </Grid> : null}
-
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="transactionMode">
                               Transaction Mode *
@@ -671,13 +653,10 @@ export default function GeneralJournalApprove(props) {
                               InputProps={{
                                 readOnly: true,
                               }}
-
                             >
                               <MenuItem value="0">--Select Transaction Mode--</MenuItem>
                               {generateDropownForTransactionModeList(transactionModes)}
-
                             </TextField>
-
                           </Grid>
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="referenceNumber">
@@ -698,7 +677,7 @@ export default function GeneralJournalApprove(props) {
                               }}
                             />
                           </Grid>
-                          <Grid item md={4} xs={12}>
+                          {/* <Grid item md={4} xs={12}>
                             <FormControlLabel
                               style={{ marginTop: '25px' }}
                               control={
@@ -711,8 +690,8 @@ export default function GeneralJournalApprove(props) {
                               }
                               label="Is Inter Estate"
                             />
-                          </Grid>
-                          <Grid item md={4} xs={12}>
+                          </Grid> */}
+                          {/* <Grid item md={4} xs={12}>
                             <InputLabel shrink id="interEstateID">
                               Inter Estate *
                             </InputLabel>
@@ -735,11 +714,10 @@ export default function GeneralJournalApprove(props) {
                               <MenuItem value="0">--Select Inter Estate--</MenuItem>
                               {generateDropDownMenuForInterEstate(factories, generalJournal.factoryID)}
                             </TextField>
-                          </Grid>
+                          </Grid> */}
                         </Grid>
                         {Hidden == true ?
                           <Grid container spacing={3}>
-
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="chequeNumber">
                                 Due Date
@@ -759,12 +737,9 @@ export default function GeneralJournalApprove(props) {
                                     'aria-label': 'change date',
                                   }}
                                   autoOk
-
                                 />
                               </MuiPickersUtilsProvider>
-
                             </Grid>
-
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="chequeNumber">
                                 Cheque Number
@@ -781,10 +756,8 @@ export default function GeneralJournalApprove(props) {
                                 InputProps={{
                                   readOnly: true,
                                 }}
-
                               />
                             </Grid>
-
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="recipientName">
                                 Recipient Name
@@ -801,19 +774,18 @@ export default function GeneralJournalApprove(props) {
                                 InputProps={{
                                   readOnly: true,
                                 }}
-
                               />
                             </Grid>
                           </Grid> : null}
                       </CardContent>
                       <CardContent height="auto">
-
                         <Box style={{ border: "1px solid gray" }}>
                           <Table>
                             <TableHead>
                               <TableRow>
                                 <TableCell>Account Name</TableCell>
                                 <TableCell>Description</TableCell>
+                                <TableCell>Description Type</TableCell>
                                 <TableCell>Debit</TableCell>
                                 <TableCell>Credit</TableCell>
                               </TableRow>
@@ -849,6 +821,23 @@ export default function GeneralJournalApprove(props) {
                                         />
                                       </TableCell>
                                       <TableCell>
+                                        <TextField select
+                                          fullWidth
+                                          name="descriptionType"
+                                          size='small'
+                                          onBlur={handleBlur}
+                                          // onChange={(e) => handleChangeForm(e)}
+                                          value={object.descriptionTypeID}
+                                          disabled={true}
+                                          variant="outlined"
+                                          id="descriptionType"
+                                          InputProps={{ readOnly: true }}
+                                        >
+                                          <MenuItem value="0">--Select Description Type--</MenuItem>
+                                          {generateDropDownMenu(accountDescriptionsType)}
+                                        </TextField>
+                                      </TableCell>
+                                      <TableCell>
                                         <TextField
                                           variant="outlined"
                                           size={"small"}
@@ -880,7 +869,6 @@ export default function GeneralJournalApprove(props) {
                       <CardContent>
                         <Box border={1} borderColor="#626964" >
                           <Grid container md={12} spacing={2} style={{ marginTop: '1rem', marginLeft: '1rem' }}>
-
                             <Grid item md={2} xs={12} style={{ marginLeft: '10px' }}>
                               <InputLabel><b>Total Debit (Rs)</b></InputLabel>
                             </Grid>
@@ -908,14 +896,12 @@ export default function GeneralJournalApprove(props) {
                             <Grid item md={2} xs={12}>
                               <InputLabel >{generalJournal.preparedBy == null || generalJournal.preparedBy == "" ? "" : ": " + generalJournal.preparedBy}</InputLabel>
                             </Grid>
-
                             <Grid item md={2} xs={12}>
                               <InputLabel ><b>Updated By</b></InputLabel>
                             </Grid>
                             <Grid item md={2} xs={12}>
                               <InputLabel >{generalJournal.updatedBy == null || generalJournal.updatedBy == "" ? "" : ": " + generalJournal.updatedBy}</InputLabel>
                             </Grid>
-
                             <Grid item md={2} xs={12}>
                               <InputLabel ><b>Checked By</b></InputLabel>
                             </Grid>
@@ -947,7 +933,6 @@ export default function GeneralJournalApprove(props) {
                           </>
                           : null}
                       </CardContent>
-
                       <Box display="flex" justifyContent="flex-end" p={2}>
                         <Button
                           variant="outlined"
@@ -982,7 +967,6 @@ export default function GeneralJournalApprove(props) {
                             </Button>
                           </>
                           : null}
-
                       </Box>
                     </PerfectScrollbar>
                   </Card>

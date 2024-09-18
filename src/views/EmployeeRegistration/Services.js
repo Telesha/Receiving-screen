@@ -138,8 +138,8 @@ async function GetEemployeeDesignationsData(groupID, employeeCategoryID) {
   var response = await CommonGet('/api/Statutory/GetDesignationByEmployeeCategoryID', 'groupID=' + groupID + '&employeeCategoryID=' + employeeCategoryID);
   for (let item of Object.entries(response.data)) {
     array[item[1]["designationID"]] = item[1]["designationName"];
-  
-    }
+
+  }
   return array;
 }
 
@@ -224,6 +224,7 @@ async function saveEmployee(data) {
     registrationNumber: data.employeeGeneralArray.registrationNumber,
     isEPFEnable: parseInt(data.employeeGeneralArray.isEPFEnable),
     ePFNumber: data.employeeGeneralArray.epfNumber,
+    espsRate: parseFloat(data.employeeGeneralArray.espsRate),
     email: data.employeeGeneralArray.email,
     genderID: parseInt(data.employeeGeneralArray.genderID),
     homeNumber: data.employeeGeneralArray.homeNumber,
@@ -339,8 +340,11 @@ async function updateEmployee(data) {
     StandingOrdersUpdate: data.standingOrdersArray,
     isBCardStatus: data.employeeGeneralArray.isBCardStatus,
     unionID: data.employeeGeneralArray.unionID,
-    reimbursementArray: data.reimbursementArray
+    reimbursementArray: data.reimbursementArray,
+    espsRate: parseFloat(data.employeeGeneralArray.espsRate),
+
   }
+
   const response = await CommonPost('/api/Employee/UpdateEmployee', null, updateModel);
   return response;
 }

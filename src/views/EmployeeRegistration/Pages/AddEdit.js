@@ -14,7 +14,9 @@ import {
   Tab,
   AppBar,
   Switch,
-  InputLabel
+  InputLabel,
+  TextField,
+
 } from '@material-ui/core';
 import Page from 'src/components/Page';
 import services from '../Services';
@@ -60,7 +62,7 @@ export default function EmployeeAddEdit() {
   const [standingFundsArray, setStandingFundsArray] = useState([]);
   const [onChangefactoryID, setFactoryID] = useState(0);
   const [designationID, setDesignationID] = useState(0);
-  const [category,setCategory] = useState(0);
+  const [category, setCategory] = useState(0);
   const [estateID, setEstateID] = useState(0);
   const [isFormValid, setIsFormValid] = useState(0);
   const [isMainButtonEnable, setIsMainButtonEnable] = useState(false);
@@ -79,7 +81,10 @@ export default function EmployeeAddEdit() {
   const [employeeWiseBasicSalaryID, setEmployeeWiseBasicSalaryID] = useState(0);
   const [designationName, setDesignationName] = useState('');
   const [allowancesTypeList, setAllowancesTypeList] = useState([]);
- 
+  const [joiningDateForGrativity, setJoiningDateForGrativity] = useState('');
+  const [isGrativityVisible, setIsGrativityVisible] = useState(false);
+  const [grativityBalance, setGrativityBalance] = useState(0);
+
   useEffect(() => {
     if (isMainButtonEnable && paymentMethodArray.length > 0) {
       setIsFormValid(true);
@@ -99,9 +104,15 @@ export default function EmployeeAddEdit() {
     }
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     getEmployeeReimbursementDetailsByEmployeeID(decryptedID)
-  },[designationID]);
+  }, [designationID]);
+
+  useEffect(() => {
+    if (isUpdate) {
+      grativityCalculator();
+    }
+  }, [employeeIsActive]);
 
   async function getEmployeeGeneralDetailsByEmployeeID(employeeID) {
     let response = await services.getEmployeeGeneralDetailsByEmployeeID(employeeID);
@@ -143,7 +154,8 @@ export default function EmployeeAddEdit() {
       raise: response[0].raise,
       employeeDivisionID: response[0].employeeDivisionID,
       isBCardStatus: response[0].isBCardStatus,
-      unionID: response[0].unionID
+      unionID: response[0].unionID,
+      espsRate: response[0].espsRate
     }
 
     var isActiveResult = response[0].isActive === null ? false : response[0].isActive;
@@ -156,6 +168,7 @@ export default function EmployeeAddEdit() {
     setInitialCustomer(response[0].isActive)
     setValue(1);
     setValue(0);
+    setJoiningDateForGrativity(response[0].joiningDate.split('T')[0]);
   }
 
   async function getEmployeePaymentDetailsByEmployeeID(employeeID) {
@@ -203,6 +216,22 @@ export default function EmployeeAddEdit() {
   function onIsActiveChange() {
     setEmployeeIsActive(!employeeIsActive);
     setIsMainButtonEnable(true);
+  }
+
+  async function grativityCalculator() {
+    const response = await services.getEmployeeBasicSalaryByDesignationID(designationID, estateID);
+    let basic = parseFloat(response.basicSalary);
+    let joinedYear = new Date(joiningDateForGrativity).getFullYear();
+    let timeYears = (new Date().getFullYear() - joinedYear);
+    var grativity = 0;
+    if (timeYears >= 5) {
+      grativity = parseFloat((basic * (parseFloat(timeYears) / 2)).toFixed(2));
+      setIsGrativityVisible(true);
+    } else {
+      grativity = 0;
+      setIsGrativityVisible(false);
+    }
+    setGrativityBalance(grativity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   }
 
   async function saveEmployee() {
@@ -348,11 +377,8 @@ export default function EmployeeAddEdit() {
             {({
               errors,
               handleBlur,
-              handleChange,
               handleSubmit,
-              setFieldValue,
               touched,
-              values
             }) => (
               <form onSubmit={handleSubmit}>
                 <Box mt={0}>
@@ -372,7 +398,7 @@ export default function EmployeeAddEdit() {
                                 aria-label="simple tabs example" style={{ backgroundColor: "white" }}>
                                 <Tab label="General" {...a11yProps(0)} style={{ color: "black" }} />
                                 <Tab label="Payment Methods" {...a11yProps(1)} style={{ color: "black" }} />
-                                <Tab label="Reimbursement" {...a11yProps(2)} style={{ color: "black" }} disabled={category == 1 ? false : true}/>
+                                <Tab label="Reimbursement" {...a11yProps(2)} style={{ color: "black" }} disabled={category == 1 ? false : true} />
                                 <Tab label="Biometrics" {...a11yProps(3)} style={{ color: "black" }} />
                                 <Tab label="Dependent" {...a11yProps(4)} style={{ color: "black" }} onClick={() => supplimentaryTabClick()} />
                                 <Tab label="Saving & Funds" {...a11yProps(5)} style={{ color: "black" }} onClick={() => EmployeeStandingOrdersFundsTabClick()} />
@@ -380,7 +406,7 @@ export default function EmployeeAddEdit() {
                             </AppBar>
                             <TabPanel value={value} index={0} >
                               <EmployeeGeneral empGeneralArray={empGeneralArray} setEmpGeneralArray={setEmpGeneralArray} setFactoryID={setFactoryID}
-                                setIsMainButtonEnable={setIsMainButtonEnable} setDesignationID={setDesignationID} setEstateID={setEstateID} setCategory={setCategory}/>
+                                setIsMainButtonEnable={setIsMainButtonEnable} setDesignationID={setDesignationID} setEstateID={setEstateID} setCategory={setCategory} />
                             </TabPanel>
                             <TabPanel value={value} index={1} >
                               <EmployeePayments paymentMethodArray={paymentMethodArray} setPaymentMethodArray={setPaymentMethodArray}
@@ -421,6 +447,24 @@ export default function EmployeeAddEdit() {
                             name="isActive"
                           />
                         </Grid>
+                        {isGrativityVisible ?
+                          <>
+                            <Grid item md={4} xs={12}>
+                              <InputLabel shrink id="raise">
+                                Gratuity (Rs)
+                              </InputLabel>
+                              <TextField
+                                fullWidth
+                                size='small'
+                                name="raise"
+                                onBlur={handleBlur}
+                                value={grativityBalance}
+                                variant="outlined"
+                              />
+                            </Grid>
+                          </> : null}
+                        <Grid item md={4} xs={12}>
+                        </Grid>
                       </Grid>
                       <Box display="flex" justifyContent="flex-end" p={2}>
                         <Button
@@ -448,6 +492,6 @@ export default function EmployeeAddEdit() {
           </Formik>
         </Container>
       </Page>
-    </Fragment>
+    </Fragment >
   );
 };

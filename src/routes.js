@@ -248,7 +248,7 @@ import EmployeeSalaryCalculation from './views/EmployeeSalaryCalculation/Pages/L
 import GangRegistrationAddEdit from './views/Gang/Pages/AddEdit';
 import GangRegistrationListing from './views/Gang/Pages/Listing';
 import BalancePaymentListReport from './views/ReportingModules/BalancePaymentListReport/Pages/Report';
-import BalancePaymentListReportFinlays from './views/ReportingModules/BalancePaymentListReportFinlays/Pages/Report'
+import BalancePaymentListReportFinlays from './views/ReportingModules/BalancePaymentListReportFinlays/Pages/Report';
 import DenominationReport from './views/ReportingModules/DenominationReport/Pages/Report';
 import LeaveListing from 'src/views/Leave/Pages/Listing';
 import LeaveAddEdit from 'src/views/Leave/Pages/AddEdit';
@@ -413,6 +413,8 @@ import PayrollDeductionReport from './views/ReportingModules/PayrollDeductionRep
 import CheckrollDateBlocker from './views/CheckrollDateBlocker/Pages/AddEdit';
 import FixedDeductionReport from './views/ReportingModules/Fixed Deduction Report/Pages/Report';
 
+import ChildHeaderType from './views/ChildHeaderType/Pages/Listing';
+import ChildHeaderTypeAddEdit from './views/ChildHeaderType/Pages/AddEdit';
 import PayrollEarning from './views/PayrollEarning/Pages/Listing';
 import PayrollEarningAddEdit from './views/PayrollEarning/Pages/AddEdit';
 const routes = isLoggedIn => [
@@ -818,7 +820,7 @@ const routes = isLoggedIn => [
       },
       {
         path:
-          'inquiryRegistry/:groupID/:factoryID/:accountID/:startDate/:endDate/:IsGuestNavigation',
+          'ledgerAccountReviewing/:groupID/:factoryID/:accountID/:startDate/:endDate/:IsGuestNavigation',
         element: <InquiryRegistry key={1} />
       },
       {
@@ -849,7 +851,8 @@ const routes = isLoggedIn => [
         children: [
           { path: 'listing', element: <AdvancePaymentDetails /> },
           {
-            path: 'ViewAdvancePaymentDetails/:advancePaymentRequestID/:groupID/:factoryID',
+            path:
+              'ViewAdvancePaymentDetails/:advancePaymentRequestID/:groupID/:factoryID',
             element: <ViewAdvancePaymentStatusHistory />
           }
         ]
@@ -1312,7 +1315,10 @@ const routes = isLoggedIn => [
         path: 'supplierestatemapping',
         children: [
           { path: 'listing', element: <SupplierEstateMappingListing /> },
-          { path: 'addEdit/:routeID', element: <SupplierEstateMappingAddEdit /> }
+          {
+            path: 'addEdit/:routeID',
+            element: <SupplierEstateMappingAddEdit />
+          }
         ]
       },
       {
@@ -2112,6 +2118,18 @@ const routes = isLoggedIn => [
           }
         ]
       },
+
+      {
+        path: 'ChildHeaderType',
+        children: [
+          { path: 'listing', element: <ChildHeaderType/> },
+          {
+            path: 'addEdit/:childHeaderTypeID',
+            element: <ChildHeaderTypeAddEdit />
+          }
+        ]
+      },
+
       {
         path: 'employeeDesignation',
         children: [
@@ -2126,7 +2144,10 @@ const routes = isLoggedIn => [
         path: 'attendanceMark',
         children: [
           { path: 'listing', element: <AttendanceMarkListing /> },
-          { path: 'addEdit/:attendanceMarkID', element: <AttendanceMarkAddEdit /> }
+          {
+            path: 'addEdit/:attendanceMarkID',
+            element: <AttendanceMarkAddEdit />
+          }
         ]
       },
       {
@@ -2145,15 +2166,16 @@ const routes = isLoggedIn => [
       },
       {
         path: 'salaryExecution',
-        children: [
-          { path: 'listing', element: <SalaryExecutionListing /> },
-        ]
+        children: [{ path: 'listing', element: <SalaryExecutionListing /> }]
       },
       {
         path: 'createPayslipPayroll',
         children: [
           { path: 'listing', element: <CreatePayslipPayroll /> },
-          { path: 'viewCreatePayslipPayroll/:payRollMonthlyExecutionID', element: <CreatePayslipViewPayroll /> }
+          {
+            path: 'viewCreatePayslipPayroll/:payRollMonthlyExecutionID',
+            element: <CreatePayslipViewPayroll />
+          }
         ]
       },
       {
@@ -2177,15 +2199,24 @@ const routes = isLoggedIn => [
         element: <PayrollDeductionReport />
       },
 
-
-
       {
         path: 'payrollDeduction',
         children: [
           { path: 'listing', element: <PayrollListing /> },
           {
             path: 'addEdit/:payrollDeductionID',
-            element: <PayrollAddEdit/>
+            element: <PayrollAddEdit />
+          }
+        ]
+      },
+
+      {
+        path: 'ChildHeaderType',
+        children: [
+          { path: 'listing', element: <ChildHeaderTypeAddEdit/> },
+          {
+            path: 'addEdit/:payrollDeductionID',
+            element: <ChildHeaderTypeAddEdit />
           }
         ]
       },
@@ -2197,7 +2228,6 @@ const routes = isLoggedIn => [
       {
         path: 'fixedDeductionReport',
         element: <FixedDeductionReport />
-
       }
     ]
   },

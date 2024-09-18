@@ -69,11 +69,13 @@ export default function CheckrollConfigurationAddEdit() {
         machinePluckingCashKilo: '',
         overKilo: '',
         machinePluckingOverKilo: '',
-        cashDayPluckingKiloRate: '',
+        // cashDayPluckingKiloRate: '',
         cashDayPluckingOverKiloRate: ''
     });
     const [checkrollConfigurationID, setCheckrollConfigurationID] = useState(0);
     const [isUpdate, setIsUpdate] = useState(false);
+    const [isEdit, setIsEdit] = useState(false);
+    const [isHide, setIsHide] = useState(true);
     const { checkrollConfigID } = useParams();
     const navigate = useNavigate();
     const alert = useAlert();
@@ -94,7 +96,27 @@ export default function CheckrollConfigurationAddEdit() {
         trackPromise(
             getEstateDetailsByGroupID()
         )
+        setIsHide(true)
     }, [checkrollConfigSearch.groupID])
+
+    useEffect(() => {
+        if (parseInt(checkrollConfigSearch.groupID) !== 0 && parseInt(checkrollConfigSearch.estateID) !== 0) {
+            setIsHide(false)
+        }
+        ClearChechrollConfigData()
+        setCheckrollConfigSearch({
+            ...checkrollConfigSearch,
+            estateID: '0'
+        })
+        // setIsHide(true)
+    }, [checkrollConfigSearch.groupID])
+
+    useEffect(() => {
+        trackPromise(
+            getDetails()
+        )
+        ClearChechrollConfigData()
+    }, [checkrollConfigSearch.estateID])
 
     async function getPermission() {
         var permissions = await authService.getPermissionsByScreen(screenCode);
@@ -165,21 +187,48 @@ export default function CheckrollConfigurationAddEdit() {
         return items
     }
 
+    async function getDetails() {
+        setIsHide(true)
+        var response = await services.getCheckrollDetailsByGroupIDAndEstateID(checkrollConfigSearch.groupID, checkrollConfigSearch.estateID);
+        console.log('response', response)
+        if (response && Object.keys(response).length > 0) {
+            setCheckrollDetails({
+                ...checkrollDetails,
+                normalOT: response.normalOTRate,
+                nightOT: response.nightOTRate,
+                sundayOT: response.sundayOTRate,
+                cashKilo: response.cashKiloRate,
+                machinePluckingCashKilo: response.machinePluckingCashKilo,
+                overKilo: response.overKiloRate,
+                machinePluckingOverKilo: response.machinePluckingOverKilo,
+                checkrollConfigID: response.checkrollConfigurationID,
+                cashDayPluckingOverKiloRate: response.cashDayPluckingOverKiloRate,
+                cashDayPluckingKiloRate: response.cashDayPluckingKiloRate
+            })
+            setIsEdit(true);
+            setIsHide(false);
+        } else {
+            // alert.error("No Records to Display")
+            setIsEdit(false);
+            setIsHide(false);
+        }
+    }
+
     async function saveCheckrollConfigurations() {
-        if (isUpdate) {
+        if (isUpdate || isEdit) {
             const updateModel = {
-                checkrollConfigID: parseInt(checkrollConfigurationID),
-                normalOTRate: checkrollDetails.normalOT == '' ? parseFloat(0) : parseFloat(checkrollDetails.normalOT),
-                nightOTRate: checkrollDetails.nightOT == '' ? parseFloat(0) : parseFloat(checkrollDetails.nightOT),
-                sundayOTRate: checkrollDetails.sundayOT == '' ? parseFloat(0) : parseFloat(checkrollDetails.sundayOT),
+                checkrollConfigID: isEdit ? parseInt(checkrollDetails.checkrollConfigID) : parseInt(checkrollConfigurationID),
+                normalOTRate: checkrollDetails.normalOT === '' ? parseFloat(0) : parseFloat(checkrollDetails.normalOT),
+                nightOTRate: checkrollDetails.nightOT === '' ? parseFloat(0) : parseFloat(checkrollDetails.nightOT),
+                sundayOTRate: checkrollDetails.sundayOT === '' ? parseFloat(0) : parseFloat(checkrollDetails.sundayOT),
                 cashKiloRate: parseFloat(checkrollDetails.cashKilo),
                 machinePluckingCashKilo: parseFloat(checkrollDetails.machinePluckingCashKilo),
                 machinePluckingOverKilo: parseFloat(checkrollDetails.machinePluckingOverKilo),
-                cashDayPluckingKiloRate: parseFloat(checkrollDetails.cashDayPluckingKiloRate),
+                // cashDayPluckingKiloRate: parseFloat(checkrollDetails.cashDayPluckingKiloRate),
                 cashDayPluckingOverKiloRate: parseFloat(checkrollDetails.cashDayPluckingOverKiloRate),
                 overKiloRate: parseFloat(checkrollDetails.overKilo),
                 modifiedBy: tokenDecoder.getUserIDFromToken()
-            }
+            };
 
             const resposne = await services.updateCheckrollConfigurationDetails(updateModel);
 
@@ -200,7 +249,7 @@ export default function CheckrollConfigurationAddEdit() {
                 machinePluckingCashKilo: parseFloat(checkrollDetails.machinePluckingCashKilo),
                 machinePluckingOverKilo: parseFloat(checkrollDetails.machinePluckingOverKilo),
                 overKiloRate: parseFloat(checkrollDetails.overKilo),
-                cashDayPluckingKiloRate: parseFloat(checkrollDetails.cashDayPluckingKiloRate),
+                // cashDayPluckingKiloRate: parseFloat(checkrollDetails.cashDayPluckingKiloRate),
                 cashDayPluckingOverKiloRate: parseFloat(checkrollDetails.cashDayPluckingOverKiloRate),
                 createdBy: tokenDecoder.getUserIDFromToken()
 
@@ -227,7 +276,7 @@ export default function CheckrollConfigurationAddEdit() {
             machinePluckingOverKilo: response.machinePluckingOverKilo,
             overKilo: response.overKiloRate,
             cashDayPluckingOverKiloRate: response.cashDayPluckingOverKiloRate,
-            cashDayPluckingKiloRate: response.cashDayPluckingKiloRate
+            // cashDayPluckingKiloRate: response.cashDayPluckingKiloRate
         })
 
         setCheckrollConfigSearch({
@@ -248,7 +297,8 @@ export default function CheckrollConfigurationAddEdit() {
             cashKilo: '',
             machinePluckingCashKilo: '',
             machinePluckingOverKilo: '',
-            overKilo: ''
+            overKilo: '',
+            cashDayPluckingOverKiloRate: ''
         })
     }
 
@@ -282,7 +332,7 @@ export default function CheckrollConfigurationAddEdit() {
                             cashKilo: checkrollDetails.cashKilo,
                             machinePluckingCashKilo: checkrollDetails.machinePluckingCashKilo,
                             machinePluckingOverKilo: checkrollDetails.machinePluckingOverKilo,
-                            cashDayPluckingKiloRate: checkrollDetails.cashDayPluckingKiloRate,
+                            // cashDayPluckingKiloRate: checkrollDetails.cashDayPluckingKiloRate,
                             cashDayPluckingOverKiloRate: checkrollDetails.cashDayPluckingOverKiloRate,
                             overKilo: checkrollDetails.overKilo
                         }}
@@ -316,10 +366,10 @@ export default function CheckrollConfigurationAddEdit() {
                                     .matches(/^\d{1,5}(\.\d+)?$/, 'Please enter valid cash kilo rate')
                                     .matches(/^\d{1,5}(\.\d{1,2})?$/, 'Please enter two decimal value for cash kilo rate')
                                     .test('amount', "Please provide valid cash kilo rate", val => val > 0),
-                                cashDayPluckingKiloRate: Yup.string().required('Cash Day Plucking kilo rate is required')
-                                    .matches(/^\d{1,5}(\.\d+)?$/, 'Please enter valid cash kilo rate')
-                                    .matches(/^\d{1,5}(\.\d{1,2})?$/, 'Please enter two decimal value for cash kilo rate')
-                                    .test('amount', "Please provide valid cash kilo rate", val => val > 0),
+                                // cashDayPluckingKiloRate: Yup.string().required('Cash Day Plucking kilo rate is required')
+                                //     .matches(/^\d{1,5}(\.\d+)?$/, 'Please enter valid cash kilo rate')
+                                //     .matches(/^\d{1,5}(\.\d{1,2})?$/, 'Please enter two decimal value for cash kilo rate')
+                                //     .test('amount', "Please provide valid cash kilo rate", val => val > 0),
                                 cashDayPluckingOverKiloRate: Yup.string().required('Cash Day Plucking Over kilo rate is required')
                                     .matches(/^\d{1,5}(\.\d+)?$/, 'Please enter valid cash kilo rate')
                                     .matches(/^\d{1,5}(\.\d{1,2})?$/, 'Please enter two decimal value for cash kilo rate')
@@ -392,119 +442,120 @@ export default function CheckrollConfigurationAddEdit() {
                                                 </Grid>
                                             </CardContent>
                                             <Divider />
-                                            <Box justifyContent="center" container p={2}>
-                                                <Card>
-                                                    <CardContent>
-                                                        <Grid container spacing={2}>
-                                                            <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
-                                                                <Typography p={2} style={{ fontWeight: 'bold' }}>
-                                                                    Over Time Rate (Rs.)
-                                                                </Typography>
+                                            {!isHide ?
+                                                <Box justifyContent="center" container p={2}>
+                                                    <Card>
+                                                        <CardContent>
+                                                            <Grid container spacing={2}>
+                                                                <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
+                                                                    <Typography p={2} style={{ fontWeight: 'bold' }}>
+                                                                        Over Time Rate (Rs.)
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="normalOT">
+                                                                        Normal OT <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        // shrink id="normalOT"
+                                                                        error={Boolean(touched.normalOT && errors.normalOT)}
+                                                                        fullWidth
+                                                                        helperText={touched.normalOT && errors.normalOT}
+                                                                        name="normalOT"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.normalOT}
+                                                                        variant="outlined"
+                                                                        id="normalOT"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="nightOT">
+                                                                        Night OT <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.nightOT && errors.nightOT)}
+                                                                        fullWidth
+                                                                        helperText={touched.nightOT && errors.nightOT}
+                                                                        name="nightOT"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.nightOT}
+                                                                        variant="outlined"
+                                                                        id="nightOT"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="sundayOT">
+                                                                        Sunday OT <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.sundayOT && errors.sundayOT)}
+                                                                        fullWidth
+                                                                        helperText={touched.sundayOT && errors.sundayOT}
+                                                                        name="sundayOT"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.sundayOT}
+                                                                        variant="outlined"
+                                                                        id="sundayOT"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
                                                             </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="normalOT">
-                                                                    Normal OT Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    // shrink id="normalOT"
-                                                                    error={Boolean(touched.normalOT && errors.normalOT)}
-                                                                    fullWidth
-                                                                    helperText={touched.normalOT && errors.normalOT}
-                                                                    name="normalOT"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.normalOT}
-                                                                    variant="outlined"
-                                                                    id="normalOT"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="nightOT">
-                                                                    Night OT Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.nightOT && errors.nightOT)}
-                                                                    fullWidth
-                                                                    helperText={touched.nightOT && errors.nightOT}
-                                                                    name="nightOT"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.nightOT}
-                                                                    variant="outlined"
-                                                                    id="nightOT"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="sundayOT">
-                                                                    Sunday OT Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.sundayOT && errors.sundayOT)}
-                                                                    fullWidth
-                                                                    helperText={touched.sundayOT && errors.sundayOT}
-                                                                    name="sundayOT"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.sundayOT}
-                                                                    variant="outlined"
-                                                                    id="sundayOT"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                        </Grid>
-                                                        <Grid container spacing={2}>
-                                                            <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
-                                                                <Typography p={2} style={{ fontWeight: 'bold' }}>
-                                                                    Cash Kilo Rate (Rs.)*
-                                                                </Typography>
-                                                            </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="cashKilo">
-                                                                    Plucking Cash Kilo <br />Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.cashKilo && errors.cashKilo)}
-                                                                    fullWidth
-                                                                    helperText={touched.cashKilo && errors.cashKilo}
-                                                                    name="cashKilo"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.cashKilo}
-                                                                    variant="outlined"
-                                                                    id="cashKilo"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="machinePluckingCashKilo">
-                                                                    Machine Plucking Cash Kilo Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.machinePluckingCashKilo && errors.machinePluckingCashKilo)}
-                                                                    fullWidth
-                                                                    helperText={touched.machinePluckingCashKilo && errors.machinePluckingCashKilo}
-                                                                    name="machinePluckingCashKilo"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.machinePluckingCashKilo}
-                                                                    variant="outlined"
-                                                                    id="machinePluckingCashKilo"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                            {/* <Grid item md={3} xs={12}>
+                                                            <Grid container spacing={2}>
+                                                                <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
+                                                                    <Typography p={2} style={{ fontWeight: 'bold' }}>
+                                                                        Cash Kilo Rate (Rs.)*
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="cashKilo">
+                                                                        Plucking Cash Kilo <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.cashKilo && errors.cashKilo)}
+                                                                        fullWidth
+                                                                        helperText={touched.cashKilo && errors.cashKilo}
+                                                                        name="cashKilo"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.cashKilo}
+                                                                        variant="outlined"
+                                                                        id="cashKilo"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="machinePluckingCashKilo">
+                                                                        Machine Plucking Cash Kilo <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.machinePluckingCashKilo && errors.machinePluckingCashKilo)}
+                                                                        fullWidth
+                                                                        helperText={touched.machinePluckingCashKilo && errors.machinePluckingCashKilo}
+                                                                        name="machinePluckingCashKilo"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.machinePluckingCashKilo}
+                                                                        variant="outlined"
+                                                                        id="machinePluckingCashKilo"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                {/* <Grid item md={3} xs={12}>
                                                                 <InputLabel shrink id="cashDayPluckingKiloRate">
                                                                     Cash Day Plucking Kilo Rate
                                                                 </InputLabel>
@@ -523,100 +574,100 @@ export default function CheckrollConfigurationAddEdit() {
                                                                 >
                                                                 </TextField>
                                                             </Grid> */}
-                                                        </Grid>
-                                                        <Grid container spacing={2}>
-                                                            <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
-                                                                <Typography p={2} style={{ fontWeight: 'bold' }}>
-                                                                    Over Kilo Rate (Rs.)*
-                                                                </Typography>
                                                             </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="overKilo">
-                                                                    Plucking Over Kilo<br />Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.overKilo && errors.overKilo)}
-                                                                    fullWidth
-                                                                    helperText={touched.overKilo && errors.overKilo}
-                                                                    name="overKilo"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.overKilo}
-                                                                    variant="outlined"
-                                                                    id="overKilo"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
+                                                            <Grid container spacing={2}>
+                                                                <Grid item md={3} xs={12} style={{ padding: '1vh', paddingTop: '5vh' }}>
+                                                                    <Typography p={2} style={{ fontWeight: 'bold' }}>
+                                                                        Over Kilo Rate (Rs.)*
+                                                                    </Typography>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="overKilo">
+                                                                        Plucking Over Kilo<br />Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.overKilo && errors.overKilo)}
+                                                                        fullWidth
+                                                                        helperText={touched.overKilo && errors.overKilo}
+                                                                        name="overKilo"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.overKilo}
+                                                                        variant="outlined"
+                                                                        id="overKilo"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="machinePluckingOverKilo">
+                                                                        Machine Plucking Over Kilo <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.machinePluckingOverKilo && errors.machinePluckingOverKilo)}
+                                                                        fullWidth
+                                                                        helperText={touched.machinePluckingOverKilo && errors.machinePluckingOverKilo}
+                                                                        name="machinePluckingOverKilo"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.machinePluckingOverKilo}
+                                                                        variant="outlined"
+                                                                        id="machinePluckingOverKilo"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
+                                                                <Grid item md={3} xs={12}>
+                                                                    <InputLabel shrink id="cashDayPluckingOverKiloRate">
+                                                                        Cash Day Plucking Over Kilo <br /> Rate
+                                                                    </InputLabel>
+                                                                    <TextField
+                                                                        error={Boolean(touched.cashDayPluckingOverKiloRate && errors.cashDayPluckingOverKiloRate)}
+                                                                        fullWidth
+                                                                        helperText={touched.cashDayPluckingOverKiloRate && errors.cashDayPluckingOverKiloRate}
+                                                                        name="cashDayPluckingOverKiloRate"
+                                                                        onBlur={handleBlur}
+                                                                        size='small'
+                                                                        onChange={(e) => handleChange(e)}
+                                                                        value={checkrollDetails.cashDayPluckingOverKiloRate}
+                                                                        variant="outlined"
+                                                                        id="cashDayPluckingOverKiloRate"
+                                                                        type="text"
+                                                                    >
+                                                                    </TextField>
+                                                                </Grid>
                                                             </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="machinePluckingOverKilo">
-                                                                    Machine Plucking Over Kilo Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.machinePluckingOverKilo && errors.machinePluckingOverKilo)}
-                                                                    fullWidth
-                                                                    helperText={touched.machinePluckingOverKilo && errors.machinePluckingOverKilo}
-                                                                    name="machinePluckingOverKilo"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.machinePluckingOverKilo}
-                                                                    variant="outlined"
-                                                                    id="machinePluckingOverKilo"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
+                                                            <br></br>
+                                                            <br></br>
+                                                            <Grid container justify="flex-end">
+                                                                <Box pr={2} >
+                                                                    <Button
+                                                                        color="primary"
+                                                                        variant="outlined"
+                                                                        type='reset'
+                                                                        size='small'
+                                                                        onClick={ClearChechrollConfigData}
+                                                                        disabled={isUpdate || isEdit}
+                                                                    >
+                                                                        Clear
+                                                                    </Button>
+                                                                </Box>
+                                                                <Box pr={2} >
+                                                                    <Button
+                                                                        color="primary"
+                                                                        variant="contained"
+                                                                        size='small'
+                                                                        type="submit"
+                                                                    >
+                                                                        {isUpdate || isEdit ? 'Update' : 'Save'}
+                                                                    </Button>
+                                                                </Box>
                                                             </Grid>
-                                                            <Grid item md={3} xs={12}>
-                                                                <InputLabel shrink id="cashDayPluckingOverKiloRate">
-                                                                    Cash Day Plucking Over Kilo Rate
-                                                                </InputLabel>
-                                                                <TextField
-                                                                    error={Boolean(touched.cashDayPluckingOverKiloRate && errors.cashDayPluckingOverKiloRate)}
-                                                                    fullWidth
-                                                                    helperText={touched.cashDayPluckingOverKiloRate && errors.cashDayPluckingOverKiloRate}
-                                                                    name="cashDayPluckingOverKiloRate"
-                                                                    onBlur={handleBlur}
-                                                                    size='small'
-                                                                    onChange={(e) => handleChange(e)}
-                                                                    value={checkrollDetails.cashDayPluckingOverKiloRate}
-                                                                    variant="outlined"
-                                                                    id="cashDayPluckingOverKiloRate"
-                                                                    type="text"
-                                                                >
-                                                                </TextField>
-                                                            </Grid>
-                                                        </Grid>
-                                                        <br></br>
-                                                        <br></br>
-                                                        <Grid container justify="flex-end">
-                                                            <Box pr={2} >
-                                                                <Button
-                                                                    color="primary"
-                                                                    variant="outlined"
-                                                                    type='reset'
-                                                                    size='small'
-                                                                    onClick={ClearChechrollConfigData}
-                                                                    disabled={isUpdate}
-                                                                >
-                                                                    Clear
-                                                                </Button>
-                                                            </Box>
-                                                            <Box pr={2} >
-                                                                <Button
-                                                                    color="primary"
-                                                                    variant="contained"
-                                                                    size='small'
-                                                                    type="submit"
-                                                                >
-                                                                    {isUpdate ? 'Update' : 'Save'}
-                                                                </Button>
-                                                            </Box>
-                                                        </Grid>
-                                                    </CardContent>
-                                                </Card>
-                                            </Box>
+                                                        </CardContent>
+                                                    </Card>
+                                                </Box> : null}
                                         </PerfectScrollbar>
                                     </Card>
                                 </Box>

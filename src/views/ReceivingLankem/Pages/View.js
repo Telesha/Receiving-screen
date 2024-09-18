@@ -1,7 +1,20 @@
 import React, { useRef, useState, useEffect, Fragment } from 'react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import {
-  Box, Card, Grid, TextField, makeStyles, Container, Button, CardContent, Divider, InputLabel, Switch, CardHeader, MenuItem, TableBody,
+  Box,
+  Card,
+  Grid,
+  TextField,
+  makeStyles,
+  Container,
+  Button,
+  CardContent,
+  Divider,
+  InputLabel,
+  Switch,
+  CardHeader,
+  MenuItem,
+  TableBody,
   TableCell,
   TableHead,
   TableRow,
@@ -13,7 +26,7 @@ import Page from 'src/components/Page';
 import services from '../Services';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, validateYupSchema } from 'formik';
-import * as Yup from "yup";
+import * as Yup from 'yup';
 import PageHeader from 'src/views/Common/PageHeader';
 import { LoadingComponent } from '../../../utils/newLoader';
 import { trackPromise } from 'react-promise-tracker';
@@ -21,12 +34,12 @@ import authService from '../../../utils/permissionAuth';
 import tokenService from '../../../utils/tokenDecoder';
 import { MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
-import { KeyboardDatePicker } from "@material-ui/pickers";
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import Autocomplete from '@material-ui/lab/Autocomplete';
 import ReceiptPDF from './ReceiptPDF';
 import ReactToPrint from 'react-to-print';
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     backgroundColor: theme.palette.background.dark,
     minHeight: '100%',
@@ -35,25 +48,32 @@ const useStyles = makeStyles((theme) => ({
   },
   avatar: {
     marginRight: theme.spacing(2)
-  },
+  }
 }));
 
-var screenCode = "LANKEMRECEIVING"
+var screenCode = 'LANKEMRECEIVING';
 export default function LankemReceivingView(props) {
-
-  const { accountID, startDate, endDate, referenceNumber, IsGuestNavigation } = useParams();
+  const {
+    accountID,
+    startDate,
+    endDate,
+    referenceNumber,
+    IsGuestNavigation
+  } = useParams();
   const componentRef = useRef();
   const { groupID } = useParams();
   const { factoryID } = useParams();
   const navigate = useNavigate();
-  const [title, setTitle] = useState("Receiving")
+  const [title, setTitle] = useState('Receiving');
   const classes = useStyles();
   const [factories, setFactories] = useState();
   const [transactionTypes, setTransactionTypes] = useState();
   const [payVoucherCode, setPayVoucherCode] = useState();
   const [groups, setGroups] = useState();
   const [selectedDate, handleDateChange] = useState(new Date().toISOString());
-  const [selectedDueDate, handleDueDateChange] = useState(new Date().toISOString());
+  const [selectedDueDate, handleDueDateChange] = useState(
+    new Date().toISOString()
+  );
   const [journalData, setJournalData] = useState([]);
   const [accountTypeNames, setAccountTypeNames] = useState();
   const [creditTotal, setCreditTotal] = useState(0);
@@ -64,10 +84,9 @@ export default function LankemReceivingView(props) {
   const [tranLedgerList, setTranLedgerList] = useState([]);
   const [interEstateButtonEnable, setInterEstateButtonEnable] = useState(false);
   const [customers, setCustomers] = useState();
-  const [customerCommon, setCustomerCommon] = useState(false);
   const [refNo, setRefNo] = useState();
   const [customersPaymentID, setCustomersPaymentID] = useState({
-    paymentTypeID: '0',
+    paymentTypeID: '0'
   });
   const [receiptBankData, setReceiptBankData] = useState();
 
@@ -95,43 +114,46 @@ export default function LankemReceivingView(props) {
     address: '',
     isInterEstate: false,
     interEstateID: '0',
-    customerID: '0',
-    payee: '',
+    customerID: '0'
   });
   const [QuaryParamDetails, setQuaryParamDetails] = useState({
-    groupID: "",
-    factoryID: "",
-    accountID: "",
-    startDate: "",
-    endDate: "",
-    referenceNumber: "",
-    IsGuestNavigation: "0"
+    groupID: '',
+    factoryID: '',
+    accountID: '',
+    startDate: '',
+    endDate: '',
+    referenceNumber: '',
+    IsGuestNavigation: '0'
   });
 
   let decrypted = 0;
 
   const handleClickBack = () => {
     if (QuaryParamDetails.IsGuestNavigation === '1') {
-      const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString())
-      const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString())
-      const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString())
-      const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString())
-      const encryptedAccountID = btoa(QuaryParamDetails.accountID.toString())
+      const encryptedGroupID = btoa(QuaryParamDetails.groupID.toString());
+      const encryptedFactoryID = btoa(QuaryParamDetails.factoryID.toString());
+      const encryptedStartDate = btoa(QuaryParamDetails.startDate.toString());
+      const encryptedEndDate = btoa(QuaryParamDetails.endDate.toString());
+      const encryptedAccountID = btoa(QuaryParamDetails.accountID.toString());
 
-      navigate('/app/inquiryRegistry/' + encryptedGroupID + '/' + encryptedFactoryID + '/' + encryptedAccountID + '/' + encryptedStartDate + '/' + encryptedEndDate + '/' + btoa("1"));
+      navigate(
+        '/app/ledgerAccountReviewing/' +
+          encryptedGroupID +
+          '/' +
+          encryptedFactoryID +
+          '/' +
+          encryptedAccountID +
+          '/' +
+          encryptedStartDate +
+          '/' +
+          encryptedEndDate +
+          '/' +
+          btoa('1')
+      );
     } else {
       navigate('/app/LankemReceiving/listing');
     }
-  }
-
-  const [printDate, setPrintDate] = useState('');
-  const [customerID, setCustomerID] = useState(0);
-  const [customerNamePDF, setCustomerNamePDF] = useState("Unknown Customer");
-  useEffect(() => {
-    const currentDate = new Date();
-    const formattedDate = currentDate.toLocaleString();
-    setPrintDate(formattedDate);
-  }, []);
+  };
 
   const [totalValues, setTotalValues] = useState({
     totalAmount: 0
@@ -148,7 +170,9 @@ export default function LankemReceivingView(props) {
   }, [generalJournal.groupID]);
 
   useEffect(() => {
-    trackPromise(getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID));
+    trackPromise(
+      getAccountTypeNames(generalJournal.groupID, generalJournal.factoryID)
+    );
     trackPromise(getTransactionTypes());
     trackPromise(getVoucherTypeList());
     trackPromise(getTransactionModeList());
@@ -157,12 +181,12 @@ export default function LankemReceivingView(props) {
 
   useEffect(() => {
     decrypted = atob(referenceNumber.toString());
-    const decrypedGroupID = atob(groupID.toString())
-    const decrypedFactoryID = atob(factoryID.toString())
-    const decrypedAccountID = atob(accountID.toString())
-    const decrypedStartDate = atob(startDate.toString())
-    const decrypedEndDate = atob(endDate.toString())
-    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString())
+    const decrypedGroupID = atob(groupID.toString());
+    const decrypedFactoryID = atob(factoryID.toString());
+    const decrypedAccountID = atob(accountID.toString());
+    const decrypedStartDate = atob(startDate.toString());
+    const decrypedEndDate = atob(endDate.toString());
+    const decrypedIsGuestNavigation = atob(IsGuestNavigation.toString());
     setQuaryParamDetails({
       groupID: decrypedGroupID,
       factoryID: decrypedFactoryID,
@@ -171,10 +195,12 @@ export default function LankemReceivingView(props) {
       endDate: decrypedEndDate,
       referenceNumber: decrypted,
       IsGuestNavigation: decrypedIsGuestNavigation
-    })
+    });
 
     if (decrypted != 0) {
-      trackPromise(getGeneralJournalDetails(decrypted, decrypedGroupID, decrypedFactoryID))
+      trackPromise(
+        getGeneralJournalDetails(decrypted, decrypedGroupID, decrypedFactoryID)
+      );
     }
   }, []);
 
@@ -186,9 +212,9 @@ export default function LankemReceivingView(props) {
 
   useEffect(() => {
     if (generalJournal.isInterEstate == true) {
-      setInterEstateButtonEnable(true)
+      setInterEstateButtonEnable(true);
     } else {
-      setInterEstateButtonEnable(false)
+      setInterEstateButtonEnable(false);
     }
   }, [generalJournal.isInterEstate]);
 
@@ -212,10 +238,9 @@ export default function LankemReceivingView(props) {
 
   useEffect(() => {
     if (journalData.length != 0) {
-      calculateTotal()
+      calculateTotal();
     }
   }, [journalData]);
-
 
   async function getCustomersForDropDown() {
     const customer = await services.getCustomersForDropDown(
@@ -223,7 +248,6 @@ export default function LankemReceivingView(props) {
     );
     setCustomers(customer);
   }
-
 
   // async function getReferenceNumber() {
   //   if (generalJournal.referenceNumber < 1 || generalJournal.referenceNumberk == "" || generalJournal.referenceNumber == undefined) {
@@ -255,37 +279,48 @@ export default function LankemReceivingView(props) {
   }
 
   async function getAccountTypeNames(groupID, factoryID) {
-    const accounts = await services.getLedgerAccountNamesForDatagrid(groupID, factoryID);
+    const accounts = await services.getLedgerAccountNamesForDatagrid(
+      groupID,
+      factoryID
+    );
     setAccountTypeNames(accounts);
     return accounts;
   }
 
   async function getPermissions() {
     var permissions = await authService.getPermissionsByScreen(screenCode);
-    var isAuthorized = permissions.find(p => p.permissionCode == 'ADDEDITLANKEMRECEIVING');
+    var isAuthorized = permissions.find(
+      p => p.permissionCode == 'ADDEDITLANKEMRECEIVING'
+    );
 
     if (isAuthorized === undefined) {
       navigate('/404');
     }
 
-    var isGroupFilterEnabled = permissions.find(p => p.permissionCode == 'GROUPDROPDOWN');
-    var isFactoryFilterEnabled = permissions.find(p => p.permissionCode == 'FACTORYDROPDOWN');
+    var isGroupFilterEnabled = permissions.find(
+      p => p.permissionCode == 'GROUPDROPDOWN'
+    );
+    var isFactoryFilterEnabled = permissions.find(
+      p => p.permissionCode == 'FACTORYDROPDOWN'
+    );
 
     setPermissions({
       ...permissionList,
       isGroupFilterEnabled: isGroupFilterEnabled !== undefined,
-      isFactoryFilterEnabled: isFactoryFilterEnabled !== undefined,
+      isFactoryFilterEnabled: isFactoryFilterEnabled !== undefined
     });
 
     setGeneralJournal({
       ...generalJournal,
       groupID: parseInt(tokenService.getGroupIDFromToken()),
       factoryID: parseInt(tokenService.getFactoryIDFromToken())
-    })
+    });
   }
 
   async function getfactoriesForDropDown() {
-    const factory = await services.getfactoriesForDropDown(generalJournal.groupID);
+    const factory = await services.getfactoriesForDropDown(
+      generalJournal.groupID
+    );
     setFactories(factory);
   }
 
@@ -297,9 +332,7 @@ export default function LankemReceivingView(props) {
   }
 
   async function getCustomersPaymentID() {
-    const result = await services.getCustomersPaymentID(
-      generalJournal.groupID,
-    );
+    const result = await services.getCustomersPaymentID(generalJournal.groupID);
     result.forEach(item => {
       setCustomersPaymentID(customersPaymentID => ({
         ...customersPaymentID,
@@ -309,45 +342,36 @@ export default function LankemReceivingView(props) {
     setReceiptBankData(result);
   }
 
-
-
   async function getGeneralJournalDetails(referenceNumber, groupID, factoryID) {
-    let response = await services.getGeneralJournalDetailsByReferenceNumber(referenceNumber, groupID, factoryID);
+    let response = await services.getGeneralJournalDetailsByReferenceNumber(
+      referenceNumber,
+      groupID,
+      factoryID
+    );
     let data = response;
-    setTitle("View Receiving");
-    setCustomerID(data[0].customerID);
+    setTitle('View Receiving');
     setGeneralJournal({
       ...generalJournal,
       groupID: data[0].groupID,
       factoryID: data[0].factoryID,
       transactionTypeID: data[0].transactionTypeID,
-      description: data[0].description == null ? "" : data[0].description,
+      description: data[0].description == null ? '' : data[0].description,
       payModeID: data[0].payModeID,
-      chequeNumber: data[0].chequeNumber == null ? "" : data[0].chequeNumber,
+      chequeNumber: data[0].chequeNumber == null ? '' : data[0].chequeNumber,
       preparedBy: data[0].preparedBy,
       updatedBy: data[0].updatedBy,
       referenceNumber: data[0].referenceNumber,
       recipientName: data[0].recipientName,
       transactionMode: data[0].transactionModeID,
       voucherType: data[0].voucherTypeID,
-      chequeNumber: data[0].chequeNumber == null ? "" : data[0].chequeNumber,
+      chequeNumber: data[0].chequeNumber == null ? '' : data[0].chequeNumber,
       checkedBy: data[0].checkedBy,
       isInterEstate: data[0].isInterEstate,
       interEstateID: data[0].interEstateID,
       customerID: data[0].customerID,
-      tranLedgerAccountID: data[0].tranLedgerAccountID,
+      tranLedgerAccountID: data[0].tranLedgerAccountID
     });
-    handleDateChange(new Date(data[0].date).toISOString())
-    const customer = await services.getCustomersForDropDown(
-      parseInt(data[0].factoryID)
-    );
-    if ((data[0].customerID > 0) && (customer[data[0].customerID].code == 'COMMON')) {
-      setCustomerCommon(true);
-      setCustomerNamePDF(data[0].receiver);
-    } else {
-      setCustomerCommon(false);
-      setCustomerNamePDF(customer[data[0].customerID].name);
-    }
+    handleDateChange(new Date(data[0].date).toISOString());
     //   let copyArray = data;
 
     //   let accountNameList = await getAccountTypeNames(data[0].groupID, data[0].factoryID);
@@ -372,39 +396,40 @@ export default function LankemReceivingView(props) {
     //   });
     //   setJournalData(tempArray)
     // }
-    let tranLedgerAccountID = data[0].tranLedgerAccountID
+    let tranLedgerAccountID = data[0].tranLedgerAccountID;
     let copyArray = data;
-    let accountNameList = await getAccountTypeNames(data[0].groupID, data[0].factoryID);
-    let tempArray = [...journalData]
-    var filteredArray = copyArray.filter((x) => x.accountTypeName !== tranLedgerAccountID);
+    let accountNameList = await getAccountTypeNames(
+      data[0].groupID,
+      data[0].factoryID
+    );
+    let tempArray = [...journalData];
+    var filteredArray = copyArray.filter(
+      x => x.accountTypeName !== tranLedgerAccountID
+    );
     filteredArray.forEach(element => {
       let reuslt = GetAll(element.accountTypeName, accountNameList);
-      tempArray.push(
-        {
-          accountTypeName: element.accountTypeName,
-          description: element.description,
-          credit: element.credit,
-          debit: element.debit,
-          ledgerTransactionID: element.ledgerTransactionID,
-          rowID: 0,
-          selected: reuslt
-        }
-      )
+      tempArray.push({
+        accountTypeName: element.accountTypeName,
+        description: element.description,
+        credit: element.credit,
+        debit: element.debit,
+        ledgerTransactionID: element.ledgerTransactionID,
+        rowID: 0,
+        selected: reuslt
+      });
     });
-    setJournalData(tempArray)
+    setJournalData(tempArray);
   }
-
 
   async function getGroupsForDropdown() {
     const groups = await services.getGroupsForDropdown();
     setGroups(groups);
   }
 
-
   async function getTransactionModeList() {
     const transactionModes = await services.getTransactionModeList();
     setTransactionModes(transactionModes);
-    return transactionModes
+    return transactionModes;
   }
 
   async function getVoucherTypeList() {
@@ -414,17 +439,20 @@ export default function LankemReceivingView(props) {
   }
 
   function generateDropDownMenu(data) {
-    let items = []
+    let items = [];
     if (data != null) {
       for (const [key, value] of Object.entries(data)) {
-        items.push(<MenuItem key={key} value={key}>{value}</MenuItem>);
+        items.push(
+          <MenuItem key={key} value={key}>
+            {value}
+          </MenuItem>
+        );
       }
     }
-    return items
+    return items;
   }
 
   function calculateTotal() {
-
     const totalAmount = journalData.reduce((accumulator, current) => {
       const progressFraction = current.credit;
       return accumulator + progressFraction;
@@ -437,28 +465,19 @@ export default function LankemReceivingView(props) {
   }
 
   async function getTranLedgerList() {
-    const transaction = await services.getTranLedgerListForDropdown(generalJournal.factoryID);
+    const transaction = await services.getTranLedgerListForDropdown(
+      generalJournal.factoryID
+    );
     setTranLedgerList(transaction);
   }
 
-
   function handleChange1(e) {
     const target = e.target;
-    const value = target.value
+    const value = target.value;
     setGeneralJournal({
       ...generalJournal,
       [e.target.name]: value
     });
-  }
-
-  function generateDropDownMenuWithTwoValues(data) {
-    let items = []
-    if (data != null) {
-      for (const [key, value] of Object.entries(data)) {
-        items.push(<MenuItem key={key} value={key}>{value.name}</MenuItem>);
-      }
-    }
-    return items
   }
 
   function cardTitle(titleName) {
@@ -468,16 +487,14 @@ export default function LankemReceivingView(props) {
           {titleName}
         </Grid>
         <Grid item md={2} xs={12}>
-          <PageHeader
-            onClick={handleClickBack}
-          />
+          <PageHeader onClick={handleClickBack} />
         </Grid>
       </Grid>
-    )
+    );
   }
 
   function generateDropDownMenuForInterEstate(data, selectedValue) {
-    selectedValue = selectedValue.toString()
+    selectedValue = selectedValue.toString();
     if (generalJournal.factoryID != 0) {
       let items = [];
       if (data != null) {
@@ -496,7 +513,7 @@ export default function LankemReceivingView(props) {
   function calDebitTotal() {
     let sum = 0;
     journalData.forEach(element => {
-      sum += parseFloat(element.debit)
+      sum += parseFloat(element.debit);
     });
     setDebitTotal(sum.toFixed(2));
     return sum.toFixed(2);
@@ -516,40 +533,48 @@ export default function LankemReceivingView(props) {
   }
 
   function generateDropownForVoucherList(dataList) {
-    let items = []
+    let items = [];
     if (dataList != null) {
       voucherTypes.forEach(x => {
-        items.push(<MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>{x.voucherTypeName}</MenuItem>)
+        items.push(
+          <MenuItem key={x.voucherTypeID} value={x.voucherTypeID}>
+            {x.voucherTypeName}
+          </MenuItem>
+        );
       });
-
     }
-    return items
-
+    return items;
   }
 
   function generateDropownForTransactionModeList(dataList) {
-    let items = []
+    let items = [];
     if (dataList != null) {
       transactionModes.forEach(x => {
-        items.push(<MenuItem key={x.transactionModeID} value={x.transactionModeID}>{x.transactionModeName}</MenuItem>)
+        items.push(
+          <MenuItem key={x.transactionModeID} value={x.transactionModeID}>
+            {x.transactionModeName}
+          </MenuItem>
+        );
       });
     }
-    return items
-
+    return items;
   }
 
   function GetAll(ledgerAccountID, accountTypeNames) {
-    const result = accountTypeNames.filter((a) => a.ledgerAccountID.toString() === ledgerAccountID.toString())
+    const result = accountTypeNames.filter(
+      a => a.ledgerAccountID.toString() === ledgerAccountID.toString()
+    );
     return result;
   }
 
   function isInterEstatehandleChange(e) {
-    const target = e.target
-    const value = target.name === 'isInterEstate' ? target.checked : target.value
+    const target = e.target;
+    const value =
+      target.name === 'isInterEstate' ? target.checked : target.value;
     setGeneralJournal({
       ...generalJournal,
       [e.target.name]: value
-    })
+    });
   }
 
   return (
@@ -568,24 +593,15 @@ export default function LankemReceivingView(props) {
               chequeNumber: generalJournal.chequeNumber,
               isActive: generalJournal.isActive,
               tranLedgerAccountID: generalJournal.tranLedgerAccountID,
-              customerID: generalJournal.customerID,
-              receiver: generalJournal.receiver
+              customerID: generalJournal.customerID
             }}
             enableReinitialize
           >
-            {({
-              errors,
-              handleBlur,
-              handleSubmit,
-              touched,
-              values,
-            }) => (
+            {({ errors, handleBlur, handleSubmit, touched, values }) => (
               <form onSubmit={handleSubmit}>
                 <Box mt={0}>
                   <Card>
-                    <CardHeader
-                      title={cardTitle(title)}
-                    />
+                    <CardHeader title={cardTitle(title)} />
                     <PerfectScrollbar>
                       <Divider />
                       <CardContent>
@@ -594,19 +610,20 @@ export default function LankemReceivingView(props) {
                             <InputLabel shrink id="groupID">
                               Group *
                             </InputLabel>
-                            <TextField select
+                            <TextField
+                              select
                               error={Boolean(touched.groupID && errors.groupID)}
                               fullWidth
                               helperText={touched.groupID && errors.groupID}
                               name="groupID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange1(e)}
+                              onChange={e => handleChange1(e)}
                               value={values.groupID}
                               variant="outlined"
                               id="groupID"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Group--</MenuItem>
@@ -617,19 +634,22 @@ export default function LankemReceivingView(props) {
                             <InputLabel shrink id="factoryID">
                               Estate *
                             </InputLabel>
-                            <TextField select
-                              error={Boolean(touched.factoryID && errors.factoryID)}
+                            <TextField
+                              select
+                              error={Boolean(
+                                touched.factoryID && errors.factoryID
+                              )}
                               fullWidth
                               helperText={touched.factoryID && errors.factoryID}
                               name="factoryID"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
-                              onChange={(e) => handleChange1(e)}
+                              onChange={e => handleChange1(e)}
                               value={generalJournal.factoryID}
                               variant="outlined"
                               id="factoryID"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Estate--</MenuItem>
@@ -637,7 +657,11 @@ export default function LankemReceivingView(props) {
                             </TextField>
                           </Grid>
                           <Grid item md={4} xs={12}>
-                            <InputLabel shrink id="date" style={{ marginBottom: '-8px' }}>
+                            <InputLabel
+                              shrink
+                              id="date"
+                              style={{ marginBottom: '-8px' }}
+                            >
                               Date *
                             </InputLabel>
 
@@ -649,11 +673,11 @@ export default function LankemReceivingView(props) {
                                 margin="dense"
                                 id="date-picker-inline"
                                 value={selectedDate}
-                                onChange={(e) => {
-                                  handleDateChange(e)
+                                onChange={e => {
+                                  handleDateChange(e);
                                 }}
                                 KeyboardButtonProps={{
-                                  'aria-label': 'change date',
+                                  'aria-label': 'change date'
                                 }}
                                 autoOk
                                 disabled="true"
@@ -662,34 +686,40 @@ export default function LankemReceivingView(props) {
                                 }}
                               />
                             </MuiPickersUtilsProvider>
-
                           </Grid>
                         </Grid>
                         <Grid container spacing={3}>
-                          {Hidden == true ?
+                          {Hidden == true ? (
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="voucherType">
                                 Voucher Type *
                               </InputLabel>
-                              <TextField select
-                                error={Boolean(touched.voucherType && errors.voucherType)}
+                              <TextField
+                                select
+                                error={Boolean(
+                                  touched.voucherType && errors.voucherType
+                                )}
                                 fullWidth
-                                helperText={touched.voucherType && errors.voucherType}
+                                helperText={
+                                  touched.voucherType && errors.voucherType
+                                }
                                 name="voucherType"
-                                size='small'
+                                size="small"
                                 onBlur={handleBlur}
                                 value={generalJournal.voucherType}
                                 variant="outlined"
                                 id="voucherType"
                                 InputProps={{
-                                  readOnly: true,
+                                  readOnly: true
                                 }}
-
                               >
-                                <MenuItem value="0">--Select Voucher Type--</MenuItem>
+                                <MenuItem value="0">
+                                  --Select Voucher Type--
+                                </MenuItem>
                                 {generateDropownForVoucherList(voucherTypes)}
                               </TextField>
-                            </Grid> : null}
+                            </Grid>
+                          ) : null}
                           <Grid item md={4} xs={12}>
                             <InputLabel shrink id="tranLedgerAccountID">
                               Bank Account *
@@ -698,7 +728,7 @@ export default function LankemReceivingView(props) {
                               select
                               error={Boolean(
                                 touched.tranLedgerAccountID &&
-                                errors.tranLedgerAccountID
+                                  errors.tranLedgerAccountID
                               )}
                               fullWidth
                               helperText={
@@ -718,9 +748,7 @@ export default function LankemReceivingView(props) {
                               <MenuItem value="0">
                                 --Select Ledger Account--
                               </MenuItem>
-                              {generateDropDownMenu(
-                                tranLedgerList
-                              )}
+                              {generateDropDownMenu(tranLedgerList)}
                             </TextField>
                           </Grid>
                           <Grid item md={4} xs={12}>
@@ -728,21 +756,27 @@ export default function LankemReceivingView(props) {
                               Voucher Code *
                             </InputLabel>
                             <TextField
-                              error={Boolean(touched.referenceNumber && errors.referenceNumber)}
+                              error={Boolean(
+                                touched.referenceNumber &&
+                                  errors.referenceNumber
+                              )}
                               fullWidth
-                              helperText={touched.referenceNumber && errors.referenceNumber}
+                              helperText={
+                                touched.referenceNumber &&
+                                errors.referenceNumber
+                              }
                               name="referenceNumber"
-                              size='small'
+                              size="small"
                               onBlur={handleBlur}
                               value={generalJournal.referenceNumber}
                               variant="outlined"
                               InputProps={{
-                                readOnly: true,
+                                readOnly: true
                               }}
                             />
                           </Grid>
                           <Grid item md={4} xs={12}>
-                            <InputLabel shrink id="supplierID">
+                            <InputLabel shrink id="customerID">
                               Customer *
                             </InputLabel>
                             <TextField
@@ -751,51 +785,31 @@ export default function LankemReceivingView(props) {
                                 touched.customerID && errors.customerID
                               )}
                               fullWidth
-                              helperText={touched.customerID && errors.customerID}
+                              helperText={
+                                touched.customerID && errors.customerID
+                              }
                               name="customerID"
                               size="small"
                               onBlur={handleBlur}
+                              // onChange={e => handleChangeForm(e)}
                               value={generalJournal.customerID}
                               variant="outlined"
                               id="customerID"
                               InputProps={{
-                                readOnly:
-                                  true
+                                readOnly: true
                               }}
                             >
                               <MenuItem value="0">--Select Customer--</MenuItem>
-                              {generateDropDownMenuWithTwoValues(customers)}
+                              {generateDropDownMenu(customers)}
                             </TextField>
                           </Grid>
-                          {customerCommon ?
+                          {transactionModeCode == 'CH' ? (
                             <Grid item md={4} xs={12}>
-                              <InputLabel shrink id="payee">
-                              Receiver *
-                              </InputLabel>
-                              <TextField
-                                error={Boolean(
-                                  touched.receiver && errors.receiver
-                                )}
-                                fullWidth
-                                helperText={
-                                  touched.receiver && errors.receiver
-                                }
-                                name="receiver"
-                                size="small"
-                                onBlur={handleBlur}
-                                value={generalJournal.receiver}
-                                variant="outlined"
-                                id="receiver"
-                                InputProps={{
-                                  readOnly:
-                                    true
-                                }}
-                              />
-                            </Grid>
-                            : null}
-                          {transactionModeCode == 'CH' ?
-                            <Grid item md={4} xs={12}>
-                              <InputLabel shrink id="chequeNumber" style={{ marginBottom: '-8px' }}>
+                              <InputLabel
+                                shrink
+                                id="chequeNumber"
+                                style={{ marginBottom: '-8px' }}
+                              >
                                 Due Date
                               </InputLabel>
                               <MuiPickersUtilsProvider utils={DateFnsUtils}>
@@ -807,34 +821,36 @@ export default function LankemReceivingView(props) {
                                   id="date-picker-inline"
                                   value={selectedDueDate}
                                   KeyboardButtonProps={{
-                                    'aria-label': 'change date',
+                                    'aria-label': 'change date'
                                   }}
                                   autoOk
-
                                 />
                               </MuiPickersUtilsProvider>
-
-                            </Grid> : null}
+                            </Grid>
+                          ) : null}
                         </Grid>
-                        {transactionModeCode == 'CH' ?
+                        {transactionModeCode == 'CH' ? (
                           <Grid container spacing={3}>
                             <Grid item md={4} xs={12}>
                               <InputLabel shrink id="chequeNumber">
                                 Cheque Number
                               </InputLabel>
                               <TextField
-                                error={Boolean(touched.chequeNumber && errors.chequeNumber)}
+                                error={Boolean(
+                                  touched.chequeNumber && errors.chequeNumber
+                                )}
                                 fullWidth
-                                helperText={touched.chequeNumber && errors.chequeNumber}
+                                helperText={
+                                  touched.chequeNumber && errors.chequeNumber
+                                }
                                 name="chequeNumber"
-                                size='small'
+                                size="small"
                                 onBlur={handleBlur}
                                 value={generalJournal.chequeNumber}
                                 variant="outlined"
                                 InputProps={{
-                                  readOnly: true,
+                                  readOnly: true
                                 }}
-
                               />
                             </Grid>
 
@@ -843,25 +859,28 @@ export default function LankemReceivingView(props) {
                                 Recipient Name
                               </InputLabel>
                               <TextField
-                                error={Boolean(touched.recipientName && errors.recipientName)}
+                                error={Boolean(
+                                  touched.recipientName && errors.recipientName
+                                )}
                                 fullWidth
-                                helperText={touched.recipientName && errors.recipientName}
+                                helperText={
+                                  touched.recipientName && errors.recipientName
+                                }
                                 name="recipientName"
-                                size='small'
+                                size="small"
                                 onBlur={handleBlur}
                                 value={generalJournal.recipientName}
                                 variant="outlined"
                                 InputProps={{
-                                  readOnly: true,
+                                  readOnly: true
                                 }}
-
                               />
                             </Grid>
-                          </Grid> : null}
+                          </Grid>
+                        ) : null}
                       </CardContent>
                       <CardContent height="auto">
-
-                        <Box style={{ border: "1px solid gray" }}>
+                        <Box style={{ border: '1px solid gray' }}>
                           <Table>
                             <TableHead>
                               <TableRow>
@@ -872,13 +891,17 @@ export default function LankemReceivingView(props) {
                               </TableRow>
                             </TableHead>
                             <TableBody>
-                              {
-                                journalData.map((object) => {
-                                  let ID = object.rowID
-                                  return (
-                                    <TableRow>
-                                      <TableCell style={{ padding: "16px", width: "20rem" }}>
-                                        {/* <Autocomplete
+                              {journalData.map(object => {
+                                let ID = object.rowID;
+                                return (
+                                  <TableRow>
+                                    <TableCell
+                                      style={{
+                                        padding: '16px',
+                                        width: '20rem'
+                                      }}
+                                    >
+                                      {/* <Autocomplete
                                           id={ID.toString()}
                                           options={accountTypeNames}
                                           size={"small"}
@@ -890,30 +913,42 @@ export default function LankemReceivingView(props) {
                                             <TextField {...params} fullWidth autoFocus variant="outlined" placeholder="--Select Account--" />
                                           )}
                                         /> */}
-                                        <Autocomplete
-                                          id={ID.toString()}
-                                          options={accountTypeNames}
-                                          size={"small"}
-                                          style={{ width: "20rem" }}
-                                          disabled={true}
-                                          getOptionLabel={(option) => option.ledgerAccountName}
-                                          value={object.selected !== undefined ? object.selected[0] : null}
-                                          renderInput={(params) => (
-                                            <TextField {...params} fullWidth autoFocus variant="outlined" placeholder="--Select Account--" />
-                                          )}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <TextField
-                                          variant="outlined"
-                                          size={"small"}
-                                          name={ID}
-                                          value={object.description}
-                                          fullWidth
-                                          disabled={true}
-                                        />
-                                      </TableCell>
-                                      {/* <TableCell>
+                                      <Autocomplete
+                                        id={ID.toString()}
+                                        options={accountTypeNames}
+                                        size={'small'}
+                                        style={{ width: '20rem' }}
+                                        disabled={true}
+                                        getOptionLabel={option =>
+                                          option.ledgerAccountName
+                                        }
+                                        value={
+                                          object.selected !== undefined
+                                            ? object.selected[0]
+                                            : null
+                                        }
+                                        renderInput={params => (
+                                          <TextField
+                                            {...params}
+                                            fullWidth
+                                            autoFocus
+                                            variant="outlined"
+                                            placeholder="--Select Account--"
+                                          />
+                                        )}
+                                      />
+                                    </TableCell>
+                                    <TableCell>
+                                      <TextField
+                                        variant="outlined"
+                                        size={'small'}
+                                        name={ID}
+                                        value={object.description}
+                                        fullWidth
+                                        disabled={true}
+                                      />
+                                    </TableCell>
+                                    {/* <TableCell>
                                         <TextField
                                           variant="outlined"
                                           size={"small"}
@@ -923,21 +958,20 @@ export default function LankemReceivingView(props) {
                                           disabled={true}
                                         />
                                       </TableCell> */}
-                                      <TableCell>
-                                        <TextField
-                                          variant="outlined"
-                                          size={"small"}
-                                          name={ID}
-                                          onBlur={handleBlur}
-                                          value={object.credit}
-                                          fullWidth
-                                          disabled={true}
-                                        />
-                                      </TableCell>
-                                    </TableRow>
-                                  )
-                                })
-                              }
+                                    <TableCell>
+                                      <TextField
+                                        variant="outlined"
+                                        size={'small'}
+                                        name={ID}
+                                        onBlur={handleBlur}
+                                        value={object.credit}
+                                        fullWidth
+                                        disabled={true}
+                                      />
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </Box>
@@ -992,36 +1026,42 @@ export default function LankemReceivingView(props) {
                       </CardContent> */}
                       <Box display="flex" justifyContent="flex-end" p={2}>
                         <div>&nbsp;</div>
-                        {<ReactToPrint
-                          documentTitle={generalJournal.referenceNumber + ' - Receiving Receipt'}
-                          trigger={() => (
-                            <Button
-                              color="primary"
-                              id="btnRecord"
-                              variant="contained"
-                              style={{ marginRight: '1rem' }}
-                              className={classes.colorCancel}
-                              size="small"
-                            >
-                              PDF
-                            </Button>
-                          )}
-                          content={() => componentRef.current}
-                        />}
-                        {<div hidden={true}>
-                          <ReceiptPDF
-                            ref={componentRef}
-                            generalJournal={generalJournal}
-                            // suppliersPaymentID={suppliersPaymentID}
-                            selectedDate={selectedDate}
-                            journalData={journalData}
-                            customers={customers}
-                            customersPaymentID={customersPaymentID}
-                            receiptBankData={receiptBankData}
-                            totalValues={totalValues}
-                            customerNamePDF={customerNamePDF}
+                        {
+                          <ReactToPrint
+                            documentTitle={
+                              generalJournal.referenceNumber +
+                              ' - Receiving Receipt'
+                            }
+                            trigger={() => (
+                              <Button
+                                color="primary"
+                                id="btnRecord"
+                                variant="contained"
+                                style={{ marginRight: '1rem' }}
+                                className={classes.colorCancel}
+                                size="small"
+                              >
+                                PDF
+                              </Button>
+                            )}
+                            content={() => componentRef.current}
                           />
-                        </div>}
+                        }
+                        {
+                          <div hidden={true}>
+                            <ReceiptPDF
+                              ref={componentRef}
+                              generalJournal={generalJournal}
+                              // suppliersPaymentID={suppliersPaymentID}
+                              selectedDate={selectedDate}
+                              journalData={journalData}
+                              customers={customers}
+                              customersPaymentID={customersPaymentID}
+                              receiptBankData={receiptBankData}
+                              totalValues={totalValues}
+                            />
+                          </div>
+                        }
                       </Box>
                     </PerfectScrollbar>
                   </Card>
@@ -1033,4 +1073,4 @@ export default function LankemReceivingView(props) {
       </Page>
     </Fragment>
   );
-};
+}

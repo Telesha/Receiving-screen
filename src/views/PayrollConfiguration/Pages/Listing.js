@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
 
 const screenCode = 'PAYROLLCONFIGURATION';
 
-export default function PayrollConfiguration() {
+export default function  PayrollConfiguration() {
     const [title, setTitle] = useState("Payroll Configuration");
     const classes = useStyles();
     const alert = useAlert();

@@ -21,7 +21,9 @@ export default {
   getLedgerAccountNamesForDatagrid,
   getFinancialYearStartDateByGroupIDFactoryID,
   getChequeNumber,
-  ReJectLedgerTransaction
+  ReJectLedgerTransaction,
+  getAccountDescriptions,
+  getAccountDescriptionsNormal
 };
 
 async function getAllFactories() {
@@ -44,13 +46,13 @@ async function getFactoriesByGroupID(groupID) {
 
 async function getfactoriesForDropDown(groupID) {
   var factoryArray = [];
-
   const response = await CommonGet('/api/Group/GetFactoryByGroupID', 'groupID=' + groupID)
   for (let item of Object.entries(response.data)) {
     factoryArray[item[1]["factoryID"]] = item[1]["factoryName"]
   }
   return factoryArray;
 }
+
 async function getGroupsForDropdown() {
   var groupArray = [];
   const response = await CommonGet('/api/Group/GetAllGroups', null)
@@ -65,7 +67,6 @@ async function getGroupsForDropdown() {
 async function getAccountTypeNamesForDropdown(groupID, factoryID) {
   const response = await CommonGet('/api/AccountType/GetAccountTypeNamesForDropdown',
     "groupID=" + parseInt(groupID) + "&factoryID=" + parseInt(factoryID));
-
   let array = ["Select Account "]
   for (let item of Object.entries(response.data)) {
     array[item[1]["accountTypeID"]] = item[1]["accountTypeName"]
@@ -116,15 +117,15 @@ async function saveGeneralJournal(generalJournal) {
   return response;
 }
 
-async function getGeneralJournalDetails(groupID, factoryID, transactionTypeID, referenceNumber, date) {
+async function getGeneralJournalDetails(groupID, factoryID, transactionTypeID, referenceNumber, date,statusID) {
   var newModel = {
     groupID: parseInt(groupID),
     factoryID: parseInt(factoryID),
     transactionTypeID: parseInt(transactionTypeID) == 0 ? null : parseInt(transactionTypeID),
     referenceNumber: referenceNumber.toString() == "" ? null : referenceNumber.toString(),
-    date: date == null ? null : date.toISOString()
+    date: date == null ? null : date.toISOString(),
+    statusID: parseInt(statusID)
   }
-
   const response = await CommonPost('/api/GeneralJournal/GetGeneralJournalDetails', null, newModel);
   return response.data;
 }
@@ -195,7 +196,6 @@ async function approveGeneralJournal(generalJournal) {
 async function getLedgerAccountNamesForDropdown(groupID, factoryID) {
   const response = await CommonGet('/api/LedgerAccount/GetLedgerAccountNamesForDropdown',
     "groupID=" + parseInt(groupID) + "&factoryID=" + parseInt(factoryID));
-
   let array = ["Select Account "]
   for (let item of Object.entries(response.data)) {
     array[item[1]["ledgerAccountID"]] = item[1]["ledgerAccountName"]
@@ -216,7 +216,6 @@ async function getTransactionModeList() {
 async function getLedgerAccountNamesForDatagrid(groupID, factoryID) {
   const response = await CommonGet('/api/LedgerAccount/GetLedgerAccountNamesForDropdown',
     "groupID=" + parseInt(groupID) + "&factoryID=" + parseInt(factoryID));
-
   let data = response.data;
   let result = data.map((u) => ({ ledgerAccountName: u.ledgerAccountName, ledgerAccountID: u.ledgerAccountID }));
 
@@ -226,18 +225,15 @@ async function getLedgerAccountNamesForDatagrid(groupID, factoryID) {
 async function getFinancialYearStartDateByGroupIDFactoryID(groupID, factoryID) {
   const response = await CommonGet('/api/GeneralJournal/GetFinancialYearStartDateByGroupIDFactoryID',
     "groupID=" + parseInt(groupID) + "&factoryID=" + parseInt(factoryID));
-
   return response.data;
 }
 
 async function getChequeNumber(ledgerAccountID) {
   const response = await CommonGet('/api/ChequeNumberSequence/GetChequeNumberByLedgerAccountID', "ledgerAccountID=" + parseInt(ledgerAccountID));
-
   return response;
 }
 
 async function ReJectLedgerTransaction(requestModel) {
-
   let rejectModel = {
     groupID: parseInt(requestModel.groupID.toString()),
     factoryID: parseInt(requestModel.factoryID.toString()),
@@ -245,8 +241,21 @@ async function ReJectLedgerTransaction(requestModel) {
     rejectRemark: requestModel.rejectRemark.toString(),
     modifiedBy: tokenDecoder.getUserIDFromToken()
   }
-
   const response = await CommonPost('/api/GeneralJournal/RejectGeneralJournalTransactionByReferenceNumber', null, rejectModel);
   return response;
+}
+
+async function getAccountDescriptions(accountID) {
+  const response = await CommonGet('/api/AccountType/GetAccountDescriptions', "accountID=" + parseInt(accountID));
+  return response.data;
+}
+
+async function getAccountDescriptionsNormal(accountID) {
+  const response = await CommonGet('/api/AccountType/GetAccountDescriptions', "accountID=" + parseInt(accountID));
+  let array = []
+  for (let item of Object.entries(response.data)) {
+    array[item[1]["accountDescriptionTypeID"]] = item[1]["accountDescription"]
+  }
+  return array;
 }
 

@@ -96,7 +96,6 @@ export default function PaymentCheckrollSummaryReport1(props) {
         year: '',
         month: ''
     })
-
     const navigate = useNavigate();
     const alert = useAlert();
     const componentRef = useRef();
@@ -165,6 +164,51 @@ export default function PaymentCheckrollSummaryReport1(props) {
         setDivisions(response);
     }
 
+    const groupedData = paymentCheckrollDetails.reduce((acc, item) => {
+        if (!acc[item.divisionName]) {
+            acc[item.divisionName] = [];
+        }
+        acc[item.divisionName].push(item);
+        return acc;
+    }, {});
+
+    const totalsByDivision = {};
+
+    Object.keys(groupedData).forEach(divisionName => {
+        totalsByDivision[divisionName] = [{
+            normalDays: 0, holiday: 0, totalWages: 0, overKiloAmount: 0, otAmount: 0, cashKiloAmount: 0,
+            cashDayPluckingAmount: 0, cashWorkDays: 0, cashJobAmount: 0, otherEarningAmount: 0,
+            holidayAmount: 0, bfAmount: 0, grossAmount: 0, deductionAmount: 0, balance: 0,
+            paybleAmount: 0, balanceCFAmount: 0, employerEPFAmount: 0, employerETFAmount: 0,
+            partPayment1: 0, partPayment2: 0
+        }];
+
+        groupedData[divisionName].forEach(item => {
+            const totals = totalsByDivision[divisionName][0];
+            totals.normalDays += Number(item.normalDays) || 0;
+            totals.holiday += Number(item.holiday) || 0;
+            totals.totalWages += Number(item.totalWages) || 0;
+            totals.overKiloAmount += Number(item.overKiloAmount) || 0;
+            totals.otAmount += Number(item.otAmount) || 0;
+            totals.cashKiloAmount += Number(item.cashKiloAmount) || 0;
+            totals.cashDayPluckingAmount += Number(item.cashDayPluckingAmount) || 0;
+            totals.cashWorkDays += Number(item.cashWorkDays) || 0;
+            totals.cashJobAmount += Number(item.cashJobAmount) || 0;
+            totals.otherEarningAmount += Number(item.otherEarningAmount) || 0;
+            totals.holidayAmount += Number(item.holidayAmount) || 0;
+            totals.bfAmount += Number(item.bfAmount) || 0;
+            totals.grossAmount += Number(item.grossAmount) || 0;
+            totals.deductionAmount += Number(item.deductionAmount) || 0;
+            totals.balance += Number(item.balance) || 0;
+            totals.paybleAmount += Number(item.paybleAmount) || 0;
+            totals.balanceCFAmount += Number(item.balanceCFAmount) || 0;
+            totals.employerEPFAmount += Number(item.employerEPFAmount) || 0;
+            totals.employerETFAmount += Number(item.employerETFAmount) || 0;
+            totals.partPayment1 += Number(item.partPayment1) || 0;
+            totals.partPayment2 += Number(item.partPayment2) || 0;
+        });
+    });
+
     async function GetDetails() {
         let model = {
             groupID: parseInt(paymentCheckrollSummaryInput.groupID),
@@ -179,6 +223,9 @@ export default function PaymentCheckrollSummaryReport1(props) {
             response.data.forEach(element => {
                 element.balanceCFAmount = element.balance - element.paybleAmount
             });
+
+            setPaymentCheckrollDetails(response.data);
+            createDataForExcel(response.data);
 
             // const groupedDeductDetailsList = Object.values(groupedDeductDetails);
             const groupedWages = _.groupBy(response.data, 'registrationNumber');
@@ -274,7 +321,7 @@ export default function PaymentCheckrollSummaryReport1(props) {
         const totalETFAmount = paymentCheckrollDetails.reduce((accumulator, current) => accumulator + current.employerETFAmount, 0);
         const totalPartPayment1 = paymentCheckrollDetails.reduce((accumulator, current) => accumulator + current.partPayment1, 0);
         const totalPartPayment2 = paymentCheckrollDetails.reduce((accumulator, current) => accumulator + current.partPayment2, 0);
-        
+
         setTotalValues({
             ...totalValues,
             totalNormalDays: totalNormalDays.toFixed(2),
@@ -493,7 +540,6 @@ export default function PaymentCheckrollSummaryReport1(props) {
                             Yup.object().shape({
                                 groupID: Yup.number().required('Group is required').min("1", 'Group is required'),
                                 estateID: Yup.number().required('Estate is required').min("1", 'Select a Estate'),
-                                divisionID: Yup.number().required('Division is required').min("1", 'Select a Division'),
                             })
                         }
                         onSubmit={() => trackPromise(GetDetails())}
@@ -561,7 +607,7 @@ export default function PaymentCheckrollSummaryReport1(props) {
 
                                                     <Grid item md={4} xs={3}>
                                                         <InputLabel shrink id="divisionID">
-                                                            Division *
+                                                            Division
                                                         </InputLabel>
                                                         <TextField select
                                                             fullWidth
@@ -641,60 +687,104 @@ export default function PaymentCheckrollSummaryReport1(props) {
                                                                     </TableRow>
                                                                 </TableHead>
                                                                 <TableBody>
-                                                                    {paymentCheckrollDetails.map((data, index) => (
-                                                                        <TableRow key={index}>
-                                                                            <TableCell className={`${classes.stickyColumn}`} align={'center'} style={{ border: "1px solid black" }}>{data.registrationNumber.toString().padStart(4, '0')}</TableCell>
-                                                                            <TableCell className={`${classes.stickyColumn}`} align={'left'} style={{ left: 74, border: "1px solid black" }}>{data.employeeName}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.normalDays.toFixed(2)}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.holiday.toFixed(2)}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.totalWages.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.overKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.otAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.cashKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.cashDayPluckingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.cashWorkDays.toFixed(2)}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.cashJobAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.otherEarningAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.holidayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.bfAmount.toFixed(2)}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.grossAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.deductionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.balanceCFAmount.toFixed(2)}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.employerEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.employerETFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.partPayment1.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.partPayment2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}>{data.paybleAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                                                                            <TableCell align={'right'} style={{ border: "1px solid black" }}></TableCell>
-                                                                        </TableRow>
+                                                                    {Object.keys(groupedData).map((divisionName, catIndex) => (
+                                                                        <React.Fragment key={catIndex}>
+                                                                            <TableRow>
+                                                                                <TableCell colSpan={20} align="left" style={{ fontWeight: 'bold', border: "1px solid black", backgroundColor: '#FFF366' }}>
+                                                                                    {divisionName}
+                                                                                </TableCell>
+                                                                            </TableRow>
+                                                                            {groupedData[divisionName].map((data, i) => {
+                                                                                const labelId = `enhanced-table-checkbox-${catIndex}-${i}`;
+                                                                                return (
+                                                                                    <TableRow key={i}>
+                                                                                        <TableCell className={`${classes.stickyColumn}`} align={'center'} style={{ border: "1px solid black" }}>{data.registrationNumber.toString().padStart(4, '0')}</TableCell>
+                                                                                        <TableCell className={`${classes.stickyColumn}`} align={'left'} style={{ left: 74, border: "1px solid black" }}>{data.employeeName}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.normalDays.toFixed(2)}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.holiday.toFixed(2)}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.totalWages.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.overKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.otAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.cashKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.cashDayPluckingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.cashWorkDays.toFixed(2)}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.cashJobAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.otherEarningAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.holidayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.bfAmount.toFixed(2)}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.grossAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.deductionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.balanceCFAmount.toFixed(2)}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.employerEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.employerETFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.partPayment1.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.partPayment2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}>{data.paybleAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} id={labelId} style={{ border: "1px solid black" }}></TableCell>
+                                                                                    </TableRow>
+                                                                                )
+                                                                            })}
+                                                                            {totalsByDivision[divisionName].map((data, i) => {
+
+                                                                                return (
+                                                                                    <TableRow key={divisionName}>
+                                                                                        <TableCell className={`${classes.stickyColumn}`} align={'center'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }} colSpan={2}>{"Sub Total"}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.normalDays.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.holiday.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.totalWages.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.overKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.otAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.cashKiloAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.cashDayPluckingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.cashWorkDays.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.cashJobAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.otherEarningAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.holidayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.bfAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.grossAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.deductionAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.balanceCFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.employerEPFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.employerETFAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.partPayment1.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.partPayment2.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}>{data.paybleAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "black" }}></TableCell>
+                                                                                    </TableRow>
+                                                                                )
+                                                                            })}
+                                                                        </React.Fragment>
                                                                     ))}
                                                                 </TableBody>
-                                                                <TableRow>
-                                                                    <TableCell className={`${classes.stickyColumn}`} align={'center'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }} colSpan={2}><b>Total</b></TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalNormalDays}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalHolidays}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalWages}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOverKiloAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOtAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashKiloAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.TotalCashDayPluckingAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashWorkDays}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashJobAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOtherEarningAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalHolidayAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBFAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalGrossAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalDeductionAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBalance}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBalanceCFAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalEPFAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalETFAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPartPayment1}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPartPayment2}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPaybleAmount}</TableCell>
-                                                                    <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}></TableCell>
-                                                                </TableRow>
+                                                                {paymentCheckrollSummaryInput.divisionID == 0 ?
+                                                                    <TableRow>
+                                                                        <TableCell className={`${classes.stickyColumn}`} align={'center'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }} colSpan={2}><b>Total</b></TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalNormalDays}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalHolidays}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalWages}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOverKiloAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOtAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashKiloAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.TotalCashDayPluckingAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashWorkDays}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalCashJobAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalOtherEarningAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalHolidayAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBFAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalGrossAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalDeductionAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBalance}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalBalanceCFAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalEPFAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalETFAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPartPayment1}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPartPayment2}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}>{totalValues.totalPaybleAmount}</TableCell>
+                                                                        <TableCell align={'right'} style={{ border: "1px solid black", fontWeight: "bold", fontSize: "14px", color: "red" }}></TableCell>
+                                                                    </TableRow>
+                                                                    : null}
                                                             </Table>
 
                                                         </TableContainer>
@@ -703,16 +793,20 @@ export default function PaymentCheckrollSummaryReport1(props) {
                                             </CardContent>
                                             {paymentCheckrollDetails.length > 0 ?
                                                 <Box display="flex" justifyContent="flex-end" p={2}>
-                                                    <Button
-                                                        color="primary"
-                                                        id="btnRecord"
-                                                        variant="contained"
-                                                        style={{ marginRight: '1rem' }}
-                                                        className={classes.colorRecord}
-                                                        onClick={createFile}
-                                                    >
-                                                        EXCEL
-                                                    </Button>
+                                                    {paymentCheckrollSummaryInput.divisionID != 0 ?
+                                                        <Button
+                                                            color="primary"
+                                                            id="btnRecord"
+                                                            type="submit"
+                                                            variant="contained"
+                                                            style={{ marginRight: '1rem' }}
+                                                            className={classes.colorRecord}
+                                                            onClick={createFile}
+                                                            size="small"
+                                                        >
+                                                            EXCEL
+                                                        </Button>
+                                                        : null}
                                                     <div>&nbsp;</div>
                                                     <ReactToPrint
                                                         documentTitle={"Payment Checkroll Summary Report 1"}
@@ -729,7 +823,7 @@ export default function PaymentCheckrollSummaryReport1(props) {
                                                     />
                                                     <div hidden={true}>
                                                         <CreatePDF ref={componentRef} paymentCheckrollDetails={paymentCheckrollDetails}
-                                                            SearchData={selectedSearchValues} totalValues={totalValues} />
+                                                            SearchData={selectedSearchValues} totalValues={totalValues} totalsByDivision={totalsByDivision} />
                                                     </div>
                                                 </Box> : null}
                                         </PerfectScrollbar>
